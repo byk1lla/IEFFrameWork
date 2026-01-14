@@ -14,6 +14,8 @@ if (file_exists(ROOT_PATH . '/vendor/autoload.php')) {
     exit(1);
 }
 
+use App\Core\Database;
+
 // Basic CLI Router
 $args = array_slice($argv, 1);
 $command = $args[0] ?? 'help';
@@ -76,7 +78,55 @@ switch ($command) {
         break;
         
     case 'migrate':
-        echo "Migration feature coming soon...\n";
+        echo "Starting migration...\n";
+        try {
+            $db = Database::getInstance();
+            
+            // Create migrations table if not exists
+            $db->execute("CREATE TABLE IF NOT EXISTS migrations (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                migration VARCHAR(255),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )");
+
+            // Get applied migrations
+            $appliedMigrations = $db->fetchAll("SELECT migration FROM migrations");
+            $applied = array_map(fn($m) => $m['migration'], $appliedMigrations);
+
+            // Get all migration files
+            $files = glob(APP_PATH . '/Database/Migrations/*.php');
+            $newMigrations = [];
+
+            foreach ($files as $file) {
+                $migration = basename($file, '.php');
+                if (!in_array($migration, $applied)) {
+                    $newMigrations[] = $file;
+                }
+            }
+
+            if (empty($newMigrations)) {
+                echo "Nothing to migrate.\n";
+            } else {
+                foreach ($newMigrations as $file) {
+                    $migration = basename($file, '.php');
+                    echo "Migrating: $migration\n";
+                    
+                    require_once $file;
+                    $className = 'App\\Database\\Migrations\\' . $migration;
+                    $instance = new $className();
+                    
+                    $instance->up($db);
+                    
+                    $db->execute("INSERT INTO migrations (migration) VALUES (?)", [$migration]);
+                    echo "Migrated:  $migration\n";
+                }
+                echo "Migration completed successfully.\n";
+            }
+
+        } catch (Exception $e) {
+            echo "Migration failed: " . $e->getMessage() . "\n";
+            exit(1);
+        }
         break;
         
     case 'help':
