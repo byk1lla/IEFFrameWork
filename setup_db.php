@@ -14,6 +14,12 @@ use App\Core\Database;
 
 echo "Setting up SQLite database...\n";
 
+// Ensure storage directory exists
+if (!file_exists(STORAGE_PATH)) {
+    mkdir(STORAGE_PATH, 0777, true);
+    echo "Created storage directory.\n";
+}
+
 try {
     // Database class will automatically use Config class which will check CONFIG_PATH
     $db = Database::getInstance();
