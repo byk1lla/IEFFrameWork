@@ -24,8 +24,55 @@ echo "════════════════════════�
 switch ($command) {
     case 'serve':
         $port = $args[1] ?? 8000;
-        echo "Starting development server at http://localhost:$port...\n";
+        echo "Updating development server at http://localhost:$port...\n";
         passthru("php -S localhost:$port");
+        break;
+
+    case 'make:controller':
+        $name = $args[1] ?? null;
+        if (!$name) {
+            echo "Usage: ./ief make:controller <Name>\n";
+            exit(1);
+        }
+        // Sanitize name: remove .php if user typed it
+        $name = str_replace('.php', '', $name);
+        $name = ucfirst($name);
+        if (!str_ends_with($name, 'Controller')) {
+            $name .= 'Controller';
+        }
+        
+        $path = APP_PATH . "/Controllers/{$name}.php";
+        if (file_exists($path)) {
+            echo "Error: Controller {$name} already exists.\n";
+            exit(1);
+        }
+
+        $template = "<?php\n\nnamespace App\Controllers;\n\nuse App\Core\Controller;\n\nclass {$name} extends Controller\n{\n    public function index()\n    {\n        // returning view\n    }\n}\n";
+        
+        file_put_contents($path, $template);
+        echo "Controller created: {$path}\n";
+        break;
+
+    case 'make:model':
+        $name = $args[1] ?? null;
+        if (!$name) {
+            echo "Usage: ./ief make:model <Name>\n";
+            exit(1);
+        }
+        $name = str_replace('.php', '', $name);
+        $name = ucfirst($name);
+        
+        $path = APP_PATH . "/Models/{$name}.php";
+        if (file_exists($path)) {
+            echo "Error: Model {$name} already exists.\n";
+            exit(1);
+        }
+
+        $table = strtolower($name) . 's'; // simple pluralization
+        $template = "<?php\n\nnamespace App\Models;\n\nuse App\Core\Model;\n\nclass {$name} extends Model\n{\n    protected static string \$table = '{$table}';\n    protected static array \$fillable = [];\n}\n";
+        
+        file_put_contents($path, $template);
+        echo "Model created: {$path}\n";
         break;
         
     case 'migrate':
@@ -35,9 +82,11 @@ switch ($command) {
     case 'help':
     default:
         echo "Available commands:\n";
-        echo "  serve [port]   Start PHP development server\n";
-        echo "  migrate        Run database migrations\n";
-        echo "  help           Show this help message\n";
+        echo "  serve [port]           Start PHP development server\n";
+        echo "  make:controller <name> Create a new controller\n";
+        echo "  make:model <name>      Create a new model\n";
+        echo "  migrate                Run database migrations\n";
+        echo "  help                   Show this help message\n";
         break;
 }
 
