@@ -175,4 +175,21 @@ Proje kök dizinindeki `ief` komutu ile sunucuyu başlatabilir veya diğer işle
 
 ---
 
+## 🏗️ Örnek Uygulama (Görev Yöneticisi)
+
+Proje içerisinde hazır gelen basit bir Görev Yönetimi (CRUD) uygulaması bulunmaktadır.
+
+1. Veritabanını hazırlayın:
+   ```bash
+   php setup_db.php
+   ```
+2. Uygulamayı başlatın:
+   ```bash
+   ./ief serve
+   ```
+3. Tarayıcıda test edin:
+   `http://localhost:8000/tasks`
+
+---
+
 **IEF Framework** &copy; 2024 - Tüm Hakları Saklıdır.
