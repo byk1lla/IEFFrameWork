@@ -1,0 +1,32 @@
+{
+    "name": "iefsoftware/ief-framework",
+    "description": "IEF Framework - Lightweight PHP Framework",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "IEF Software",
+            "email": "info@iefsoftware.tr"
+        }
+    ],
+    "require": {
+        "php": ">=8.0",
+        "symfony/uid": "^6.0",
+        "vlucas/phpdotenv": "^5.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        },
+        "files": [
+            "app/Helpers/helpers.php"
+        ]
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

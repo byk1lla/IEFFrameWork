@@ -1,0 +1,44 @@
+#!/usr/bin/env php
+<?php
+
+// CLI Entry Point
+define('ROOT_PATH', __DIR__);
+define('APP_PATH', ROOT_PATH . '/app');
+define('CONFIG_PATH', ROOT_PATH . '/config');
+define('STORAGE_PATH', ROOT_PATH . '/storage');
+
+if (file_exists(ROOT_PATH . '/vendor/autoload.php')) {
+    require_once ROOT_PATH . '/vendor/autoload.php';
+} else {
+    echo "Error: Vendor directory not found. Please run 'composer install'.\n";
+    exit(1);
+}
+
+// Basic CLI Router
+$args = array_slice($argv, 1);
+$command = $args[0] ?? 'help';
+
+echo "\n🦅 IEF Framework CLI Tool\n";
+echo "═════════════════════════\n\n";
+
+switch ($command) {
+    case 'serve':
+        $port = $args[1] ?? 8000;
+        echo "Starting development server at http://localhost:$port...\n";
+        passthru("php -S localhost:$port");
+        break;
+        
+    case 'migrate':
+        echo "Migration feature coming soon...\n";
+        break;
+        
+    case 'help':
+    default:
+        echo "Available commands:\n";
+        echo "  serve [port]   Start PHP development server\n";
+        echo "  migrate        Run database migrations\n";
+        echo "  help           Show this help message\n";
+        break;
+}
+
+echo "\n";
