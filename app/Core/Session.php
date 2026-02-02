@@ -22,7 +22,7 @@ class Session
         $sessionConfig = $config['session'] ?? [];
 
         session_name($sessionConfig['name'] ?? 'TAVUK_SESSION');
-        
+
         session_set_cookie_params([
             'lifetime' => ($sessionConfig['lifetime'] ?? 120) * 60,
             'path' => $sessionConfig['path'] ?? '/',
@@ -31,6 +31,12 @@ class Session
             'httponly' => $sessionConfig['httponly'] ?? true,
             'samesite' => $sessionConfig['samesite'] ?? 'Lax',
         ]);
+
+        // Session dosyalarını proje içinde sakla
+        $sessionPath = defined('STORAGE_PATH') ? STORAGE_PATH . '/sessions' : __DIR__ . '/../../storage/sessions';
+        if (is_dir($sessionPath)) {
+            session_save_path($sessionPath);
+        }
 
         session_start();
         self::$started = true;
@@ -69,7 +75,7 @@ class Session
     public static function destroy(): void
     {
         self::clear();
-        
+
         if (ini_get('session.use_cookies')) {
             $params = session_get_cookie_params();
             setcookie(
@@ -82,7 +88,7 @@ class Session
                 $params['httponly']
             );
         }
-        
+
         session_destroy();
         self::$started = false;
     }
@@ -99,7 +105,8 @@ class Session
 
     public static function verifyCsrfToken(?string $token): bool
     {
-        if (!$token) return false;
+        if (!$token)
+            return false;
         return hash_equals($_SESSION['_csrf_token'] ?? '', $token);
     }
 

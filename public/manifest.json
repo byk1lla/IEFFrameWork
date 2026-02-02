@@ -1,0 +1,30 @@
+{
+    "name": "E-Fatura Pro",
+    "short_name": "E-Fatura",
+    "description": "Profesyonel E-Fatura Yönetim Sistemi",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0f172a",
+    "theme_color": "#3b82f6",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/assets/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/assets/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [],
+    "categories": [
+        "business",
+        "finance"
+    ],
+    "lang": "tr"
+}
