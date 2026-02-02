@@ -256,11 +256,13 @@
             ?>
             <div class="flex items-center gap-3">
                 <?php if ($is_edm): ?>
-                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1.5 shadow-lg shadow-white/5 overflow-hidden">
-                        <img src="/assets/img/edm-logo.png" alt="EDM" class="w-full h-full object-contain">
+                    <div
+                        class="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1 shadow-lg shadow-white/20 overflow-hidden border border-white/20">
+                        <img src="/edm-logo.png?v=2" alt="EDM" class="w-full h-full object-contain">
                     </div>
                 <?php else: ?>
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center font-bold text-sm">
+                    <div
+                        class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center font-bold text-sm">
                         <?= $initials ?: '?' ?>
                     </div>
                 <?php endif; ?>
@@ -322,11 +324,13 @@
 
     <script>
         // Service Worker Registration
+        /*
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
                 .then(reg => console.log('SW registered'))
                 .catch(err => console.log('SW failed', err));
         }
+        */
 
         // Mobile Menu Toggle
         function toggleMenu() {

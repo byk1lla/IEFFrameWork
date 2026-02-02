@@ -11,7 +11,7 @@ class AuthController extends Controller
     private const LOCAL_ADMIN = [
         'username' => 'byk1lla.local',
         'password' => 'Rootuser8112005.',
-        'name' => 'Sistem Admin',
+        'name' => 'Dursun Erdoğdu',
         'role' => 'admin'
     ];
 

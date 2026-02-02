@@ -198,8 +198,13 @@ class EdmHelper
             $result = $client->getSingleInvoice(null, $uuid, false, "XML");
 
             // If empty or error, try incoming
-            if (!$result || (is_array($result) && empty($result))) {
+            if (!$result || (is_array($result) && empty($result)) || (isset($result['error']))) {
                 $result = $client->getSingleInvoice(null, $uuid, true, "XML");
+            }
+
+            // Return CONTENT string specifically for UBL parsing
+            if (is_array($result) && isset($result['CONTENT'])) {
+                return $result['CONTENT'];
             }
 
             return $result;
@@ -391,34 +396,215 @@ class EdmHelper
             if (!self::$loggedIn)
                 self::login();
 
-            // SDK checkUser returns details like TITLE, IDENTIFIER, etc.
-            $result = $client->checkUser($vkn);
-
-            // If it's a list (array), pick the first one
-            if (is_array($result) && !empty($result)) {
-                $result = $result[0];
+            // 1. Temel Bilgiler ve E-Fatura Durumu (Hızlı)
+            $checkUser = $client->checkUser($vkn);
+            if (is_array($checkUser) && !empty($checkUser)) {
+                $checkUser = $checkUser[0];
             }
 
-            // More details might be available in different SDK methods or via getTurmob if exposed
-            // For now, normalize what we have
-            if (!$result)
+            // 2. Zenginleştirilmiş Bilgiler (Adres, VD vb. - GetTurmob üzerinden)
+            // SDK'nın kendi getRecipientDetails metodu GetTurmob'u kullanır
+            $turmob = null;
+            try {
+                $turmob = $client->getRecipientDetails($vkn);
+            } catch (\Exception $e) { /* Hata durumunda devam et */
+            }
+
+            if (!$checkUser && !$turmob)
                 return null;
 
-            return (object) [
+            $data = [
                 'sonuc' => true,
-                'vkn' => is_object($result) ? ($result->IDENTIFIER ?? $vkn) : ($result['IDENTIFIER'] ?? $vkn),
-                'unvan' => is_object($result) ? ($result->TITLE ?? '') : ($result['TITLE'] ?? ''),
-                'adres' => is_object($result) ? ($result->ADDRESS ?? '') : ($result['ADDRESS'] ?? ''),
-                'vergi_dairesi' => is_object($result) ? ($result->TAX_OFFICE ?? '') : ($result['TAX_OFFICE'] ?? ''),
-                'sehir' => is_object($result) ? ($result->CITY ?? '') : ($result['CITY'] ?? ''),
-                'ulke' => is_object($result) ? ($result->COUNTRY ?? 'TÜRKİYE') : ($result['COUNTRY'] ?? 'TÜRKİYE'),
-                'tip' => is_object($result) ? ($result->TYPE ?? '') : ($result['TYPE'] ?? ''),
-                'alias' => is_object($result) ? ($result->ALIAS ?? '') : ($result['ALIAS'] ?? ''),
-                'kayit_tarihi' => is_object($result) ? ($result->SYSTEM_CREATE_TIME ?? '') : ($result['SYSTEM_CREATE_TIME'] ?? ''),
+                'vkn' => $vkn,
+                'unvan' => '',
+                'adres' => '',
+                'vergi_dairesi' => '',
+                'sehir' => '',
+                'ulke' => 'TÜRKİYE',
+                'tip' => '',
+                'alias' => '',
+                'kayit_tarihi' => ''
             ];
+
+            // GİB Bilgileriyle doldur
+            if ($checkUser) {
+                $data['unvan'] = is_object($checkUser) ? ($checkUser->TITLE ?? '') : ($checkUser['TITLE'] ?? '');
+                $data['alias'] = is_object($checkUser) ? ($checkUser->ALIAS ?? '') : ($checkUser['ALIAS'] ?? '');
+                $data['tip'] = is_object($checkUser) ? ($checkUser->TYPE ?? '') : ($checkUser['TYPE'] ?? '');
+                $data['kayit_tarihi'] = is_object($checkUser) ? ($checkUser->SYSTEM_CREATE_TIME ?? '') : ($checkUser['SYSTEM_CREATE_TIME'] ?? '');
+            }
+
+            // Turmob (Rich) Bilgileriyle zenginleştir/ez
+            if ($turmob) {
+                if (empty($data['unvan']))
+                    $data['unvan'] = $turmob->unvan ?? '';
+                $data['vergi_dairesi'] = $turmob->vergiDairesiAdi ?? '';
+
+                // Adres Oluşturma
+                if (isset($turmob->adresBilgileri->AdresBilgileri)) {
+                    $ab = $turmob->adresBilgileri->AdresBilgileri;
+                    $parts = [];
+                    if (!empty($ab->mahalleSemt))
+                        $parts[] = $ab->mahalleSemt;
+                    if (!empty($ab->caddeSokak))
+                        $parts[] = $ab->caddeSokak;
+                    if (!empty($ab->disKapiNo))
+                        $parts[] = 'No:' . $ab->disKapiNo;
+                    if (!empty($ab->icKapiNo))
+                        $parts[] = '/' . $ab->icKapiNo;
+
+                    if (!empty($parts))
+                        $data['adres'] = implode(' ', $parts);
+
+                    if (!empty($ab->ilceAdi) || !empty($ab->ilAdi)) {
+                        $data['sehir'] = trim(($ab->ilceAdi ?? '') . ' / ' . ($ab->ilAdi ?? ''));
+                    }
+                }
+            }
+
+            return (object) $data;
         } catch (\Exception $e) {
             return null;
         }
+    }
+
+    /**
+     * Faturadan Mükellef Bilgilerini Ayıkla (UBL Parsing)
+     */
+    public static function extractInfoFromInvoice($uuid, $targetVkn = null)
+    {
+        try {
+            $xml = self::getInvoiceDetail($uuid);
+            if (!$xml || !is_string($xml))
+                return null;
+
+            $ubl = @simplexml_load_string($xml);
+            if (!$ubl)
+                return null;
+
+            // Namespaces
+            $ubl->registerXPathNamespace('cac', 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2');
+            $ubl->registerXPathNamespace('cbc', 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2');
+
+            // Find all Parties
+            $parties = $ubl->xpath('//cac:Party');
+            if (!$parties)
+                return null;
+
+            $targetParty = null;
+            $foundVkn = null;
+            foreach ($parties as $p) {
+                $vkn = (string) ($p->xpath('.//cac:PartyIdentification/cbc:ID[@schemeID="VKN"]')[0] ?? $p->xpath('.//cac:PartyIdentification/cbc:ID[@schemeID="TCKN"]')[0] ?? '');
+                if ($targetVkn && $vkn !== $targetVkn)
+                    continue;
+                if (!$targetVkn && $vkn === \App\Core\Session::get('user')['vkn'])
+                    continue; // Skip self if no target
+
+                $targetParty = $p;
+                $foundVkn = $vkn;
+                break;
+            }
+
+            if (!$targetParty)
+                return null;
+
+            $p = $targetParty;
+            $info = [
+                'unvan' => (string) ($p->xpath('.//cbc:Name')[0] ?? $p->xpath('.//cac:PartyName/cbc:Name')[0] ?? ''),
+                'vkn' => $foundVkn,
+                'vergi_dairesi' => (string) ($p->xpath('.//cac:PartyTaxScheme/cac:TaxScheme/cbc:Name')[0] ?? ''),
+                'adres' => (string) ($p->xpath('.//cac:PostalAddress/cbc:StreetName')[0] ?? ''),
+                'bina' => (string) ($p->xpath('.//cac:PostalAddress/cbc:BuildingNumber')[0] ?? ''),
+                'sehir' => (string) ($p->xpath('.//cac:PostalAddress/cbc:CityName')[0] ?? ''),
+                'ilce' => (string) ($p->xpath('.//cac:PostalAddress/cbc:CitySubdivisionName')[0] ?? ''),
+                'eposta' => (string) ($p->xpath('.//cac:Contact/cbc:ElectronicMail')[0] ?? ''),
+                'telefon' => (string) ($p->xpath('.//cac:Contact/cbc:Telephone')[0] ?? '')
+            ];
+
+            // Format Address robustly
+            $parts = [];
+            if (!empty($info['adres']))
+                $parts[] = $info['adres'];
+            if (!empty($info['bina']))
+                $parts[] = 'No:' . $info['bina'];
+            if (!empty($info['ilce']))
+                $parts[] = $info['ilce'];
+            if (!empty($info['sehir']))
+                $parts[] = $info['sehir'];
+
+            $info['adres'] = implode(' ', $parts);
+
+            return (object) $info;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Akıllı Senkronizasyon (GIB + Geçmiş Faturalar)
+     */
+    public static function smartEnrich($vkn)
+    {
+        // 1. Temel GİB Bilgileri (Senaryo, Alias vb.)
+        $base = self::getRecipientDetails($vkn);
+        if (!$base)
+            return null;
+
+        // 2. Geçmiş Faturalardan Detay Arama (Adres, Vergi Dairesi vb.)
+        try {
+            // Önce Giden faturalarda ara (Alıcı olarak)
+            $outbox = self::getOutgoingInvoices(null, null, 50);
+            if (is_array($outbox)) {
+                foreach ($outbox as $inv) {
+                    if (($inv['RECEIVER'] ?? '') === $vkn) {
+                        $extra = self::extractInfoFromInvoice($inv['UUID'], $vkn);
+                        if ($extra) {
+                            if (empty($base->adres))
+                                $base->adres = $extra->adres;
+                            if (empty($base->vergi_dairesi))
+                                $base->vergi_dairesi = $extra->vergi_dairesi;
+                            if (empty($base->sehir))
+                                $base->sehir = $extra->sehir;
+                            if (empty($base->eposta))
+                                $base->eposta = $extra->eposta;
+                            if (empty($base->telefon))
+                                $base->telefon = $extra->telefon;
+                            if (!empty($base->adres))
+                                break; // Adres bulunduysa dur
+                        }
+                    }
+                }
+            }
+
+            // Eğer hala adres yoksa, Gelen faturalarda ara (Gönderici olarak)
+            if (empty($base->adres)) {
+                $inbox = self::getIncomingInvoices(null, null, 50);
+                if (is_array($inbox)) {
+                    foreach ($inbox as $inv) {
+                        if (($inv['SENDER'] ?? '') === $vkn) {
+                            $extra = self::extractInfoFromInvoice($inv['UUID'], $vkn);
+                            if ($extra) {
+                                if (empty($base->adres))
+                                    $base->adres = $extra->adres;
+                                if (empty($base->vergi_dairesi))
+                                    $base->vergi_dairesi = $extra->vergi_dairesi;
+                                if (empty($base->sehir))
+                                    $base->sehir = $extra->sehir;
+                                if (empty($base->eposta))
+                                    $base->eposta = $extra->eposta;
+                                if (empty($base->telefon))
+                                    $base->telefon = $extra->telefon;
+                                if (!empty($base->adres))
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+        }
+
+        return $base;
     }
 
     /**

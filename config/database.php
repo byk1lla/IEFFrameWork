@@ -3,9 +3,9 @@
 return [
     'driver' => 'sqlite', // Options: mysql, sqlite
     'host' => 'localhost',
-    'database' => 'ief_db',
+    'database' => 'edm-mobile',
     'username' => 'root',
-    'password' => '',
+    'password' => 'efeece16',
     'path' => STORAGE_PATH . '/database.sqlite', // For SQLite
     'charset' => 'utf8mb4',
     'collation' => 'utf8mb4_unicode_ci',

@@ -65,6 +65,7 @@ Router::get('/api/version', function () {
 });
 
 Router::get('/api/cari/ara', 'ApiController@cariAra');
+Router::get('/api/cari/sync/{id}', 'ApiController@cariSync');
 Router::post('/api/vkn/sorgula', 'ApiController@vknSorgula');
 Router::get('/api/dashboard/stats', 'ApiController@dashboardStats');
 // Mükellef Sorgula (New)
