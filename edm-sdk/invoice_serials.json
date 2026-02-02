@@ -1,0 +1,12 @@
+{
+    "E-FATURA": {
+        "prefix": "DEE",
+        "year": 2026,
+        "next_sequence": 10
+    },
+    "E-ARSIV": {
+        "prefix": "DEA",
+        "year": 2026,
+        "next_sequence": 1
+    }
+}

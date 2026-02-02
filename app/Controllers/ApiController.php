@@ -37,6 +37,7 @@ class ApiController extends Controller
 
     /**
      * Fatura listesi - async loading
+     * SDK returns array of associative arrays
      */
     public function faturaListesi()
     {
@@ -49,17 +50,33 @@ class ApiController extends Controller
             EdmHelper::logout();
 
             $faturalar = [];
-            if (is_object($outbox) && isset($outbox->INVOICE)) {
-                $invoices = is_array($outbox->INVOICE) ? $outbox->INVOICE : [$outbox->INVOICE];
-                foreach ($invoices as $inv) {
+
+            // SDK returns array directly - each item is associative array
+            if (is_array($outbox) && !isset($outbox['error'])) {
+                foreach ($outbox as $inv) {
+                    // Parse PAYABLE_AMOUNT which comes as "1234.56 TRY" 
+                    $amountStr = $inv['PAYABLE_AMOUNT'] ?? '0';
+                    $amount = floatval(preg_replace('/[^0-9.,]/', '', str_replace(',', '.', $amountStr)));
+
+                    // Parse ISSUE_DATE or CDATE
+                    $dateStr = $inv['ISSUE_DATE'] ?? $inv['CDATE'] ?? '';
+                    $formattedDate = '-';
+                    if ($dateStr) {
+                        try {
+                            $formattedDate = date('d.m.Y', strtotime($dateStr));
+                        } catch (\Exception $e) {
+                            $formattedDate = $dateStr;
+                        }
+                    }
+
                     $faturalar[] = [
-                        'id' => $inv->ID ?? '-',
-                        'uuid' => $inv->UUID ?? '',
-                        'receiver' => $inv->RECEIVER_NAME ?? $inv->ReceiverName ?? '-',
-                        'date' => isset($inv->CREATE_DATE) ? date('d.m.Y', strtotime($inv->CREATE_DATE)) : '-',
-                        'amount' => floatval($inv->PAYABLE_AMOUNT ?? $inv->PayableAmount ?? 0),
-                        'status' => $inv->STATUS ?? $inv->Status ?? 'PENDING',
-                        'type' => $inv->INVOICE_TYPE ?? $inv->InvoiceType ?? 'SATIS'
+                        'id' => $inv['ID'] ?? '-',
+                        'uuid' => $inv['UUID'] ?? '',
+                        'receiver' => $inv['RECEIVER'] ?? $inv['CUSTOMER'] ?? '-',
+                        'date' => $formattedDate,
+                        'amount' => $amount,
+                        'status' => $inv['STATUS'] ?? 'PENDING',
+                        'type' => $inv['INVOICE_TYPE'] ?? 'SATIS'
                     ];
                 }
             }
@@ -82,24 +99,53 @@ class ApiController extends Controller
         }
 
         try {
+            // Debug log
+            $logFile = '/opt/homebrew/var/www/efatura-pro/storage/logs/edm_debug.log';
+            if (!file_exists(dirname($logFile)))
+                mkdir(dirname($logFile), 0777, true);
+
+            error_log(date('[Y-m-d H:i:s] ') . "VKN Sorgu: $vkn\n", 3, $logFile);
+
             $result = EdmHelper::queryTaxpayer($vkn);
             EdmHelper::logout();
 
-            if ($result && isset($result->User)) {
-                $user = is_array($result->User) ? $result->User[0] : $result->User;
+            error_log(date('[Y-m-d H:i:s] ') . "VKN Sonuç: " . print_r($result, true) . "\n", 3, $logFile);
+
+            $user = null;
+            if ($result) {
+                if (is_array($result)) {
+                    // Check if it's an associative array (single user) or numeric array (list)
+                    if (isset($result['IDENTIFIER']) || isset($result->IDENTIFIER)) {
+                        $user = $result;
+                    } else {
+                        $user = $result[0] ?? null;
+                    }
+                } elseif (is_object($result)) {
+                    $user = $result;
+                }
+            }
+
+            if ($user) {
+                // Handle both object and array access
+                $identifier = is_object($user) ? ($user->IDENTIFIER ?? $vkn) : ($user['IDENTIFIER'] ?? $vkn);
+                $title = is_object($user) ? ($user->TITLE ?? $user->ALIAS ?? '-') : ($user['TITLE'] ?? $user['ALIAS'] ?? '-');
+                $alias = is_object($user) ? ($user->ALIAS ?? '') : ($user['ALIAS'] ?? '');
+                $type = is_object($user) ? ($user->TYPE ?? '') : ($user['TYPE'] ?? '');
+
                 return $this->json([
                     'success' => true,
                     'mukellef' => [
-                        'vkn' => $user->Identifier ?? $vkn,
-                        'unvan' => $user->Title ?? $user->Alias ?? '-',
-                        'alias' => $user->Alias ?? '',
-                        'type' => $user->Type ?? ''
+                        'vkn' => $identifier,
+                        'unvan' => $title,
+                        'alias' => $alias,
+                        'type' => $type
                     ]
                 ]);
             }
 
             return $this->json(['success' => false, 'error' => 'Mükellef bulunamadı']);
         } catch (\Exception $e) {
+            error_log(date('[Y-m-d H:i:s] ') . "VKN Hata: " . $e->getMessage() . "\n", 3, $logFile);
             return $this->json(['success' => false, 'error' => $e->getMessage()]);
         }
     }
@@ -111,7 +157,7 @@ class ApiController extends Controller
     {
         $query = strtolower($this->request->input('q') ?? '');
 
-        $addressBookPath = __DIR__ . '/../../edm-sdk/address_book.json';
+        $addressBookPath = dirname(__DIR__, 2) . '/edm-sdk/address_book.json';
         $results = [];
 
         if (file_exists($addressBookPath)) {

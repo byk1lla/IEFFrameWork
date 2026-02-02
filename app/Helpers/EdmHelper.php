@@ -19,7 +19,7 @@ class EdmHelper
     public static function getClient()
     {
         if (self::$client === null) {
-            require_once __DIR__ . '/../../edm-sdk/autoload.php';
+            require_once dirname(__DIR__, 2) . '/edm-sdk/autoload.php';
 
             $credentials = \App\Core\Session::get('edm_credentials');
             if (!$credentials) {
@@ -64,7 +64,8 @@ class EdmHelper
     }
 
     /**
-     * Gelen faturaları getir (CORRECT METHOD NAME)
+     * Gelen faturaları getir
+     * SDK returns ARRAY directly (not object with INVOICE property)
      */
     public static function getIncomingInvoices($startDate = null, $endDate = null, $limit = 50)
     {
@@ -76,7 +77,7 @@ class EdmHelper
             $startDate = $startDate ?? date('Y-m-d', strtotime('-30 days'));
             $endDate = $endDate ?? date('Y-m-d');
 
-            // Correct method: getIncomingInvoice
+            // SDK returns array directly!
             return $client->getIncomingInvoice($limit, null, null, $startDate, $endDate);
         } catch (\Exception $e) {
             return ['error' => $e->getMessage()];
@@ -84,7 +85,8 @@ class EdmHelper
     }
 
     /**
-     * Giden faturaları getir (CORRECT METHOD NAME)
+     * Giden faturaları getir
+     * SDK returns ARRAY directly (not object with INVOICE property)
      */
     public static function getOutgoingInvoices($startDate = null, $endDate = null, $limit = 50)
     {
@@ -96,7 +98,7 @@ class EdmHelper
             $startDate = $startDate ?? date('Y-m-d', strtotime('-30 days'));
             $endDate = $endDate ?? date('Y-m-d');
 
-            // Correct method: getOutgoingInvoice
+            // SDK returns array directly!
             return $client->getOutgoingInvoice($limit, $startDate, $endDate);
         } catch (\Exception $e) {
             return ['error' => $e->getMessage()];
@@ -120,7 +122,7 @@ class EdmHelper
     }
 
     /**
-     * Dashboard istatistikleri (async için API endpoint'e taşınacak)
+     * Dashboard istatistikleri
      */
     public static function getDashboardStats()
     {
@@ -138,26 +140,24 @@ class EdmHelper
             if (!self::$loggedIn)
                 self::login();
 
-            // Gelen faturalar
+            // Gelen faturalar - SDK returns array directly
             $inbox = self::getIncomingInvoices(date('Y-m-d', strtotime('-30 days')), date('Y-m-d'), 100);
-            if (is_object($inbox) && isset($inbox->INVOICE)) {
-                $invoices = is_array($inbox->INVOICE) ? $inbox->INVOICE : [$inbox->INVOICE];
-                $stats['toplam_gelen'] = count($invoices);
+            if (is_array($inbox) && !isset($inbox['error'])) {
+                $stats['toplam_gelen'] = count($inbox);
             }
 
-            // Giden faturalar
+            // Giden faturalar - SDK returns array directly
             $outbox = self::getOutgoingInvoices(date('Y-m-d', strtotime('-30 days')), date('Y-m-d'), 100);
-            if (is_object($outbox) && isset($outbox->INVOICE)) {
-                $invoices = is_array($outbox->INVOICE) ? $outbox->INVOICE : [$outbox->INVOICE];
-                $stats['toplam_giden'] = count($invoices);
+            if (is_array($outbox) && !isset($outbox['error'])) {
+                $stats['toplam_giden'] = count($outbox);
 
-                // Son 5 fatura ve istatistikler
-                $limited = array_slice($invoices, 0, 5);
-                foreach ($invoices as $inv) {
-                    $amount = floatval($inv->PAYABLE_AMOUNT ?? $inv->PayableAmount ?? 0);
+                foreach ($outbox as $inv) {
+                    // inv is associative array with keys like PAYABLE_AMOUNT, STATUS, etc.
+                    $amountStr = $inv['PAYABLE_AMOUNT'] ?? '0';
+                    $amount = floatval(preg_replace('/[^0-9.,]/', '', str_replace(',', '.', $amountStr)));
                     $stats['aylık_ciro'] += $amount;
 
-                    $status = $inv->STATUS ?? $inv->Status ?? '';
+                    $status = $inv['STATUS'] ?? '';
                     if (stripos($status, 'SUCCEED') !== false || stripos($status, 'APPROVED') !== false) {
                         $stats['onaylanan']++;
                     } else {
@@ -165,7 +165,8 @@ class EdmHelper
                     }
                 }
 
-                $stats['son_faturalar'] = $limited;
+                // Son 5 fatura
+                $stats['son_faturalar'] = array_slice($outbox, 0, 5);
             }
 
             self::logout();
@@ -175,5 +176,30 @@ class EdmHelper
         }
 
         return $stats;
+    }
+
+    /**
+     * Tekil Fatura Detayı Getir
+     */
+    public static function getInvoiceDetail($uuid)
+    {
+        try {
+            $client = self::getClient();
+            if (!self::$loggedIn)
+                self::login();
+
+            // Try outgoing first
+            $result = $client->getSingleInvoice(null, $uuid, false, "XML");
+
+            // If empty or error, try incoming
+            if (!$result || (is_array($result) && empty($result))) {
+                $result = $client->getSingleInvoice(null, $uuid, true, "XML");
+            }
+
+            return $result;
+
+        } catch (\Exception $e) {
+            return ['error' => $e->getMessage()];
+        }
     }
 }

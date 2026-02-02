@@ -4,7 +4,6 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Session;
-use App\Helpers\EdmHelper;
 
 class FaturaController extends Controller
 {
@@ -20,30 +19,13 @@ class FaturaController extends Controller
     }
 
     /**
-     * Fatura listesi
+     * Fatura listesi - Async loading (no EDM call here!)
      */
     public function index()
     {
-        $faturalar = [];
-        $error = null;
-
-        try {
-            if (Session::get('edm_credentials')) {
-                $outbox = EdmHelper::getOutgoingInvoices(date('Y-m-d', strtotime('-90 days')), date('Y-m-d'), 100);
-
-                if (is_object($outbox) && isset($outbox->INVOICE)) {
-                    $faturalar = is_array($outbox->INVOICE) ? $outbox->INVOICE : [$outbox->INVOICE];
-                }
-                EdmHelper::logout();
-            }
-        } catch (\Exception $e) {
-            $error = $e->getMessage();
-        }
-
+        // Page loads instantly, data loaded via JavaScript fetch
         return $this->view('fatura/index', [
             'title' => 'Faturalar - E-Fatura Pro',
-            'faturalar' => $faturalar,
-            'error' => $error,
             'layout' => 'app'
         ]);
     }
