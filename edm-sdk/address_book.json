@@ -1,506 +1,547 @@
-[
-    {
+{
+    "0": {
         "IDENTIFIER": "0010625019",
         "TITLE": "2K TAŞIT MUAYENE İSTASYONLARI A.Ş",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:wsdefaultgb@tuvturk.com.tr"
     },
-    {
+    "1": {
         "IDENTIFIER": "0081808835",
         "TITLE": "AEGEAN FİNANSAL DANIŞMANLIK LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "2": {
         "IDENTIFIER": "0080819994",
         "TITLE": "AGRİMİLK TARIM VE HAYVANCILIK TEKNOLOJİLERİ SANAYİ TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "3": {
         "IDENTIFIER": "0691153397",
         "TITLE": "ANDROMEDA TV DİJİTAL PLATFORM İŞLETMECİLİĞİ A.Ş.",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@dsmart.com.tr"
     },
-    {
+    "4": {
         "IDENTIFIER": "0690425781",
         "TITLE": "ANES MOTORLU ARAÇLAR SAN.TİC.LTD.ŞTİ.",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@anesmotor.com"
     },
-    {
+    "5": {
         "IDENTIFIER": "0720039666",
         "TITLE": "ARAS KARGO YURT İÇİ YURT DIŞI TAŞIMACILIK A.Ş.",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:efinansgb@araskargo.com.tr"
     },
-    {
+    "6": {
         "IDENTIFIER": "0890064466",
         "TITLE": "ASLAN TİCARET TRAFİK MÜŞAVİRLİĞİ LTD.ŞTİ.",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@aslan-ticaret.com"
     },
-    {
+    "7": {
         "IDENTIFIER": "1020989328",
         "TITLE": "ATLAS GROUP İTHALAT İHRACAT VE DANIŞMANLIK TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "8": {
         "IDENTIFIER": "1180021879",
         "TITLE": "AYDOĞANLAR OTOMOTİV SANAYİ VE TİCARET A.Ş.",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@aydoganlar.net"
     },
-    {
+    "9": {
         "IDENTIFIER": "1750051846",
         "TITLE": "BİM Birleşik Mağazalar A.Ş.",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:faturagb@bim.com.tr"
     },
-    {
+    "10": {
         "IDENTIFIER": "1770564517",
         "TITLE": "BİRAN AMBALAJ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "11": {
         "IDENTIFIER": "53023417454",
         "TITLE": "BİRKAN KORKMAZ",
         "TYPE": "SAHIS",
         "ALIAS": "urn:mail:defaultgb@gmail.com"
     },
-    {
+    "12": {
         "IDENTIFIER": "1800433927",
         "TITLE": "Boss promosyon ürünleri san. ve tic ltd. şti",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "13": {
         "IDENTIFIER": "2030017071",
         "TITLE": "CarrefourSA Carrefour Sabancı Ticaret Merkezi A.Ş.",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@carrefour.com"
     },
-    {
+    "14": {
         "IDENTIFIER": "1790617537",
         "TITLE": "CK Boğaziçi Elektrik Perakende Satış Anonim Şirketi",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:abonegb@clkbogazici.com"
     },
-    {
+    "15": {
         "IDENTIFIER": "2110714468",
         "TITLE": "CMA BİYOTEKNOLOJİ VE İLAÇ SANAYİ TİCARET ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "16": {
         "IDENTIFIER": "2310701731",
         "TITLE": "ÇARŞIM GROUP OTEL TÜKETİM ÜRÜNLERİ TEKSTİL SANAYİ VE TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "17": {
         "IDENTIFIER": "2420447764",
         "TITLE": "Çetaş Motor A.Ş. - Merkez",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@cetas.com.tr"
     },
-    {
+    "18": {
         "IDENTIFIER": "2890685299",
         "TITLE": "DEMIRÖREN İNTERNET VE İLETIŞIM HIZMETLERI TICARET A.Ş.",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@dsmart.com.tr"
     },
-    {
+    "19": {
         "IDENTIFIER": "2890685310",
         "TITLE": "DEMİRÖREN İLETİŞİM HİZMETLERİ A.Ş.",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@dsmart.com.tr"
     },
-    {
+    "20": {
         "IDENTIFIER": "3060512786",
         "TITLE": "DEMİRÖREN TV DİGİTAL PLATFORM İŞLETMECİLİĞİ ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@dsmart.com.tr"
     },
-    {
+    "21": {
         "IDENTIFIER": "2910107981",
         "TITLE": "DENİZ AMBALAJ VE MATBAACILIK SANAYİ TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "22": {
         "IDENTIFIER": "2930885245",
         "TITLE": "DERİN OLUKLU MUKAVVA AMBALAJ VE SANAYİ TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "23": {
         "IDENTIFIER": "3100584552",
         "TITLE": "DORA KOZMETİK SANAYİ VE DIŞ TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "24": {
         "IDENTIFIER": "3100614642",
         "TITLE": "DOREPLAS PLASTİK SANAYİ TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "25": {
         "IDENTIFIER": "3130025020",
         "TITLE": "DROGSAN İLAÇLARI SANAYİ VE TİCARET ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "26": {
         "IDENTIFIER": "3240427733",
         "TITLE": "ECOPACK MAKİNE VE GIDA SAN.TİC.LTD.ŞTİ.",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "27": {
         "IDENTIFIER": "10760291310",
         "TITLE": "EMEL ÖZGEÇER",
         "TYPE": "SAHIS",
         "ALIAS": " "
     },
-    {
+    "28": {
         "IDENTIFIER": "3340541836",
         "TITLE": "EMR GRUP DIŞ TİC.LTD.ŞTİ.",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "29": {
         "IDENTIFIER": "3341265437",
         "TITLE": "EMR TEKNİK TEKSTİL SANAYİ VE TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "30": {
         "IDENTIFIER": "11111111111",
         "TITLE": "ENTEGRE TÜRK",
         "TYPE": "SAHIS",
         "ALIAS": " "
     },
-    {
+    "31": {
         "IDENTIFIER": "4841083703",
         "TITLE": "ENTEGRETÜRK TEKNOLOJİ LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:zaferteknoparkgb@entegreturk.com"
     },
-    {
+    "32": {
         "IDENTIFIER": "3850646269",
         "TITLE": "FAVORİ OLUKLU MUKAVVA PAZARLAMA VE TİCARET ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "33": {
         "IDENTIFIER": "3860160127",
         "TITLE": "Fırat Otomotiv Gıda Tekstil Sanayi ve Ticaret Limited Şirketi",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@firatotomarket.com"
     },
-    {
+    "34": {
         "IDENTIFIER": "4581720092",
         "TITLE": "HASAY İÇ VE DIŞ TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "35": {
         "IDENTIFIER": "39172323280",
         "TITLE": "HATİCE ÇOŞKUN",
         "TYPE": "SAHIS",
         "ALIAS": " "
     },
-    {
+    "36": {
         "IDENTIFIER": "4610402410",
         "TITLE": "HELİKON AMBALAJ VE KOZMETİK ÜRÜNLERİ SANAYİ VE TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "37": {
         "IDENTIFIER": "1630713616",
         "TITLE": "HYGIENE NUTRI SCIENCE YEM KATKILARI SANAYİ VE TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "38": {
         "IDENTIFIER": "4650498303",
         "TITLE": "ILGAZ OLUKLU MUKAVVA VE PLASTİK AMBALAJ SANAYİ TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "39": {
         "IDENTIFIER": "4810014274",
         "TITLE": "İSMAİLOĞULLARI İNŞAAT SANAYİ VE TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@petlasbayi.com"
     },
-    {
+    "40": {
         "IDENTIFIER": "4700022607",
         "TITLE": "İSTANBUL GAZ DAĞITIM SANAYİ VE TİCARET ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@igdas.com.tr"
     },
-    {
+    "41": {
         "IDENTIFIER": "4840230332",
         "TITLE": "Japon Otomotiv Turizm Nakliye Sanayi ve Ticaret Limited Şirketi",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@ayasofyazilim.com"
     },
-    {
+    "42": {
         "IDENTIFIER": "5990793521",
         "TITLE": "KUTAYTEKS TEKSTİL SANAYİ VE TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "43": {
         "IDENTIFIER": "6010489950",
         "TITLE": "KUZENLER ÖRME LASTİK SANAYİ VE TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "44": {
         "IDENTIFIER": "6080920912",
         "TITLE": "LEVEL ULUSLARARASI LOJİSTİK VE ORGANİZASYON HİZMETLERİ ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "45": {
         "IDENTIFIER": "6090488092",
         "TITLE": "M.O.S.T MODERN SÜT TEK.HAY.GID.PAZ.İNŞ.TAAH.SAN.TİC.A.Ş.",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "46": {
         "IDENTIFIER": "55915321078",
         "TITLE": "MEHMET BEKAR",
         "TYPE": "SAHIS",
         "ALIAS": " "
     },
-    {
+    "47": {
         "IDENTIFIER": "6191078917",
         "TITLE": "MESAPLAST KİMYA SANAYİ TİCARET ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "48": {
         "IDENTIFIER": "6222394979",
         "TITLE": "MODELO YATAK DIŞ TİCARET ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "49": {
         "IDENTIFIER": "6220548524",
         "TITLE": "MODERN RESTORAN VE KAFETERYA İŞLETMELERİ ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "50": {
         "IDENTIFIER": "6220581189",
         "TITLE": "MOT GRUP BİLİŞİM LTD.ŞTİ.",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "51": {
         "IDENTIFIER": "1780495513",
         "TITLE": "MOZAİK İLETİŞİM HİZMETLERİ ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@dsmart.com.tr"
     },
-    {
+    "52": {
         "IDENTIFIER": "20929338916",
         "TITLE": "MUSTAFA ÇELİK",
         "TYPE": "SAHIS",
         "ALIAS": " "
     },
-    {
+    "53": {
         "IDENTIFIER": "11534855912",
         "TITLE": "MUSTAFA TAŞKIN",
         "TYPE": "SAHIS",
         "ALIAS": " "
     },
-    {
+    "54": {
         "IDENTIFIER": "3090345332",
         "TITLE": "N11 ELEKTRONİK TİCARET VE BİLİŞİM HİZMETLERİ ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@dogusplanet.com"
     },
-    {
+    "55": {
         "IDENTIFIER": "6440813029",
         "TITLE": "ORAK İÇ VE DIŞ TİCARET SANAYİ LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@mapahomeliving.com"
     },
-    {
+    "56": {
         "IDENTIFIER": "6490900092",
         "TITLE": "OUNO DİJİTAL İLETİŞİM ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@ounodijital.com"
     },
-    {
+    "57": {
         "IDENTIFIER": "7300744634",
         "TITLE": "PİXİU DİGİTAL PAZARLAMA HİZMETLERİ ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "58": {
         "IDENTIFIER": "7331076999",
         "TITLE": "PROGİEN KİMYA SANAYİ VE TİCARET ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "59": {
         "IDENTIFIER": "7330899638",
         "TITLE": "PROXİMA İTHALAT İHRACAT SANAYİ VE TİCARET ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "60": {
         "IDENTIFIER": "7330638410",
         "TITLE": "PTTEM TEKNOLOJİ VE ELEKTRONİK HİZMETLERİ ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@pttem.com"
     },
-    {
+    "61": {
         "IDENTIFIER": "28708431070",
         "TITLE": "RAMAZAN DEMİROĞLU",
         "TYPE": "SAHIS",
         "ALIAS": " "
     },
-    {
+    "62": {
         "IDENTIFIER": "31051850474",
         "TITLE": "SABAHATTİN OĞUZ TEMİZYÜREK",
         "TYPE": "SAHIS",
         "ALIAS": " "
     },
-    {
+    "63": {
         "IDENTIFIER": "26896999020",
         "TITLE": "sadettin koç",
         "TYPE": "SAHIS",
         "ALIAS": " "
     },
-    {
+    "64": {
         "IDENTIFIER": "41200588288",
         "TITLE": "SAİT ÖZOLU",
         "TYPE": "SAHIS",
         "ALIAS": "urn:mail:saitgb@edmbilisim.com"
     },
-    {
+    "65": {
         "IDENTIFIER": "7420729652",
         "TITLE": "SAMEDİ MOBİLYA İTHALAT İHRACAT LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "66": {
         "IDENTIFIER": "7510409221",
         "TITLE": "SARP OYUNCAK DIŞ TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "67": {
         "IDENTIFIER": "10135569426",
         "TITLE": "SERVER TÜRKİYE SUNUCU VE YAZILIM HİZMETLERİ ZEKİYE ŞULE ÇELİK",
         "TYPE": "SAHIS",
         "ALIAS": " "
     },
-    {
+    "68": {
         "IDENTIFIER": "7721400165",
         "TITLE": "SMART PAPER TURKEY KAĞIT MALZEMELERİ SANAYİ VE TİCARET ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "69": {
         "IDENTIFIER": "7721564596",
         "TITLE": "SNI GLOBAL GIDA TURİZM SANAYİ VE TİCARET ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "70": {
         "IDENTIFIER": "7730336148",
         "TITLE": "SOLARES İTHALAT İHRACAT SAN. TİC. A.Ş.",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@solaresith.com"
     },
-    {
+    "71": {
         "IDENTIFIER": "31042850766",
         "TITLE": "SONGÜL ATIKARA",
         "TYPE": "SAHIS",
         "ALIAS": " "
     },
-    {
+    "72": {
         "IDENTIFIER": "7810382811",
         "TITLE": "SPC KOZMETİK YAZILIM SANAYİ VE TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "73": {
         "IDENTIFIER": "37927436988",
         "TITLE": "ŞEHMUS BİLGİÇ",
         "TYPE": "SAHIS",
         "ALIAS": "urn:mail:120980defaultgb@luca.com.tr"
     },
-    {
+    "74": {
         "IDENTIFIER": "8150037902",
         "TITLE": "TAB GIDA SANAYİ VE TİCARET ANONİM ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "75": {
         "IDENTIFIER": "8360897060",
         "TITLE": "TEKNORYA BİLİŞİM HİZMETLERİ SAN. VE TİC.A.Ş.",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:defaultgb@teknorya.com.tr"
     },
-    {
+    "76": {
         "IDENTIFIER": "8360835106",
         "TITLE": "TELAMELT TEKSTİL SANAYİ VE TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "77": {
         "IDENTIFIER": "8380940056",
         "TITLE": "TEMPOPACK AMBALAJ SANAYİ VE TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "78": {
         "IDENTIFIER": "8590632819",
         "TITLE": "TRENTA TEKSTİL TEKNOLOJİK ÜRÜNLER SANAYİ VE TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "79": {
         "IDENTIFIER": "8600395373",
         "TITLE": "TUĞBA KOZMETİK VE TEKSTİL ÜRÜNLERİ PAZARLAMA SANAYİ TİC. LTD. ŞTİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "80": {
         "IDENTIFIER": "8820314931",
         "TITLE": "TÜVTÜRK İSTANBUL TAŞIT MUAYENE İŞLETİM A.Ş.",
         "TYPE": "KURUM",
         "ALIAS": "urn:mail:wsdefaultgb@tuvturk.com.tr"
     },
-    {
+    "81": {
         "IDENTIFIER": "8920485458",
         "TITLE": "UMAY HAYVANCILIK VE TARIM ÜRÜNLERİ İTHALAT İHRACAT SANAYİ VE TİCARET LİMİTED ŞİRKETİ",
         "TYPE": "KURUM",
         "ALIAS": " "
     },
-    {
+    "82": {
         "IDENTIFIER": "9250353261",
         "TITLE": "Vodafone Telekomünikasyon A.Ş.",
         "TYPE": "KURUM",
         "ALIAS": "defaultgb"
     },
-    {
+    "83": {
         "IDENTIFIER": "9860171552",
         "TITLE": "YURTİÇİ LOJİSTİK TEDARİK ZİNCİRİ YÖNETİMİ VE DAĞITIM A.Ş.",
         "TYPE": "KURUM",
         "ALIAS": " "
+    },
+    "cariler": {
+        "8600395373": {
+            "vkn": "8600395373",
+            "unvan": "TUĞBA KOZMETİK VE TEKSTİL ÜRÜNLERİ PAZARLAMA SANAYİ TİC. LTD. ŞTİ",
+            "adres": null,
+            "telefon": null,
+            "email": null,
+            "grup": "Genel",
+            "created_at": "2026-02-02 06:03:24",
+            "alias": "urn:mail:tugbapk@edmbilisim.com"
+        },
+        "3240427733": {
+            "vkn": "3240427733",
+            "unvan": "ECOPACK MAKİNE VE GIDA SAN.TİC.LTD.ŞTİ.",
+            "adres": "",
+            "telefon": "",
+            "email": "",
+            "grup": "Müşteri",
+            "created_at": "2026-02-02 06:14:44"
+        },
+        "7810382811": {
+            "vkn": "7810382811",
+            "unvan": "SPC KOZMETİK YAZILIM SANAYİ VE TİCARET LİMİTED ŞİRKETİ",
+            "adres": "",
+            "telefon": "",
+            "email": "",
+            "alias": null,
+            "grup": "Müşteri",
+            "created_at": "2026-02-02 06:14:51"
+        },
+        "2910107981": {
+            "vkn": "2910107981",
+            "unvan": "DENİZ AMBALAJ VE MATBAACILIK SANAYİ TİCARET LİMİTED ŞİRKETİ",
+            "adres": "",
+            "telefon": "",
+            "email": "",
+            "alias": "",
+            "grup": "Müşteri",
+            "created_at": "2026-02-02 06:15:18"
+        }
     }
-]
+}

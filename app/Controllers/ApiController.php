@@ -115,7 +115,9 @@ class ApiController extends Controller
             if ($result) {
                 if (is_array($result)) {
                     // Check if it's an associative array (single user) or numeric array (list)
-                    if (isset($result['IDENTIFIER']) || isset($result->IDENTIFIER)) {
+                    if (isset($result['IDENTIFIER'])) {
+                        $user = $result;
+                    } elseif (is_object($result) && isset($result->IDENTIFIER)) {
                         $user = $result;
                     } else {
                         $user = $result[0] ?? null;
@@ -123,6 +125,14 @@ class ApiController extends Controller
                 } elseif (is_object($result)) {
                     $user = $result;
                 }
+            }
+
+            // 1. Check Address Book first for additional info (like address)
+            $localInfo = null;
+            $addressBookPath = dirname(__DIR__, 2) . '/edm-sdk/address_book.json';
+            if (file_exists($addressBookPath)) {
+                $book = json_decode(file_get_contents($addressBookPath), true);
+                $localInfo = $book['cariler'][$vkn] ?? null;
             }
 
             if ($user) {
@@ -136,9 +146,11 @@ class ApiController extends Controller
                     'success' => true,
                     'mukellef' => [
                         'vkn' => $identifier,
-                        'unvan' => $title,
-                        'alias' => $alias,
-                        'type' => $type
+                        'unvan' => $localInfo['unvan'] ?? $title,
+                        'alias' => $localInfo['alias'] ?? $alias,
+                        'type' => $type,
+                        'adres' => $localInfo['adres'] ?? '',
+                        'is_local' => ($localInfo !== null)
                     ]
                 ]);
             }
@@ -210,33 +222,61 @@ class ApiController extends Controller
      */
     public function mukellefAra()
     {
-        $query = $this->request->input('q') ?? '';
+        $query = strtolower($this->request->input('q') ?? '');
 
-        if (empty($query) || strlen($query) < 3) {
-            return $this->json(['success' => false, 'error' => 'En az 3 karakter giriniz']);
+        if (empty($query) || strlen($query) < 2) {
+            return $this->json(['success' => false, 'error' => 'En az 2 karakter giriniz']);
         }
 
+        $formatted = [];
+
+        // 1. ÖNCE YEREL REHBERDE ARA
+        $addressBookPath = dirname(__DIR__, 2) . '/edm-sdk/address_book.json';
+        if (file_exists($addressBookPath)) {
+            $book = json_decode(file_get_contents($addressBookPath), true);
+            foreach ($book['cariler'] ?? [] as $vkn => $cari) {
+                $searchStr = strtolower($vkn . ' ' . ($cari['unvan'] ?? ''));
+                if (strpos($searchStr, $query) !== false) {
+                    $formatted[] = [
+                        'vkn' => $vkn,
+                        'unvan' => $cari['unvan'] ?? '',
+                        'type' => 'REHBER',
+                        'alias' => $cari['alias'] ?? '',
+                        'adres' => $cari['adres'] ?? '',
+                        'is_local' => true
+                    ];
+                }
+            }
+        }
+
+        // 2. EDM SİSTEMİNDE ARA (Eğer yerel sonuç çok azsa veya devam etmek istiyorsak)
         try {
             $results = EdmHelper::searchTaxpayerByName($query);
             EdmHelper::logout();
 
-            $formatted = [];
             if ($results && is_array($results)) {
                 foreach ($results as $user) {
-                    $formatted[] = [
-                        'vkn' => is_object($user) ? ($user->IDENTIFIER ?? '') : ($user['IDENTIFIER'] ?? ''),
-                        'unvan' => is_object($user) ? ($user->TITLE ?? '') : ($user['TITLE'] ?? ''),
-                        'type' => is_object($user) ? ($user->TYPE ?? '') : ($user['TYPE'] ?? ''),
-                        'alias' => is_object($user) ? ($user->ALIAS ?? '') : ($user['ALIAS'] ?? '')
-                    ];
+                    $vkn = is_object($user) ? ($user->IDENTIFIER ?? '') : ($user['IDENTIFIER'] ?? '');
+
+                    // Zaten yerelde bulduysak tekrar ekleme
+                    $exists = array_filter($formatted, fn($f) => $f['vkn'] === $vkn);
+                    if (empty($exists)) {
+                        $formatted[] = [
+                            'vkn' => $vkn,
+                            'unvan' => is_object($user) ? ($user->TITLE ?? '') : ($user['TITLE'] ?? ''),
+                            'type' => is_object($user) ? ($user->TYPE ?? '') : ($user['TYPE'] ?? ''),
+                            'alias' => is_object($user) ? ($user->ALIAS ?? '') : ($user['ALIAS'] ?? ''),
+                            'adres' => '',
+                            'is_local' => false
+                        ];
+                    }
                 }
             }
-
-            return $this->json(['success' => true, 'data' => $formatted]);
-
         } catch (\Exception $e) {
-            return $this->json(['success' => false, 'error' => $e->getMessage()]);
+            // EDM hatasını sessiz geç, yerel sonuçlar yeterli olabilir
         }
+
+        return $this->json(['success' => true, 'data' => $formatted]);
     }
 
     /**

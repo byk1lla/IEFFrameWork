@@ -21,20 +21,67 @@
     </div>
 
     <!-- PDF Viewer -->
-    <div class="flex-1 bg-gray-900 rounded-2xl overflow-hidden border border-white/10 relative group">
-        <!-- Loading Overlay -->
-        <div id="pdf-loading" class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-10">
-            <div class="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-            <p class="text-gray-400 animate-pulse">Orjinal PDF yükleniyor...</p>
+    <div class="flex-1 bg-gray-900 rounded-2xl overflow-hidden border border-white/10 relative group shadow-2xl">
+        <!-- Sexy Loading Overlay -->
+        <div id="pdf-loading"
+            class="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/90 backdrop-blur-sm z-30">
+            <div class="relative w-20 h-20 mb-6">
+                <div class="absolute inset-0 border-4 border-blue-500/10 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-t-blue-500 rounded-full animate-spin"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <i class="fas fa-file-invoice text-2xl text-blue-500 animate-pulse"></i>
+                </div>
+            </div>
+            <div class="text-xl font-medium text-white flex items-center gap-1">
+                <span>Yükleniyor</span>
+                <span class="inline-flex w-8 justify-start dot-animation"></span>
+            </div>
+            <p class="text-gray-500 text-sm mt-2">E-Fatura sistemi hazırlanıyor...</p>
         </div>
 
-        <iframe id="pdf-frame" src="" class="w-full h-full border-none"
-            onload="document.getElementById('pdf-loading').classList.add('hidden')"></iframe>
+        <iframe id="pdf-frame" src="" class="w-full h-full border-none opacity-0 transition-opacity duration-700"
+            onload="hideLoading()"></iframe>
     </div>
 </div>
 
+<style>
+    .dot-animation::after {
+        content: '';
+        animation: dots 2s infinite;
+    }
+
+    @keyframes dots {
+        0% {
+            content: '';
+        }
+
+        25% {
+            content: '.';
+        }
+
+        50% {
+            content: '..';
+        }
+
+        75% {
+            content: '...';
+        }
+
+        100% {
+            content: '';
+        }
+    }
+</style>
+
 <script>
     const INVOICE_UUID = '<?= $id ?>';
+
+    function hideLoading() {
+        const frame = document.getElementById('pdf-frame');
+        const loader = document.getElementById('pdf-loading');
+        frame.classList.remove('opacity-0');
+        loader.classList.add('hidden');
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
         // 1. Load Status Metadata

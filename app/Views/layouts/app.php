@@ -148,9 +148,11 @@
             <h1 class="text-lg font-semibold text-primary-400 lg:hidden">
                 <i class="fas fa-file-invoice"></i> E-Fatura Pro
             </h1>
-            <!-- Desktop Title (Optional, or keep empty if title is in page content) -->
-            <div class="hidden lg:block">
-                <!-- Breadcrumb or Page Title can go here -->
+            <!-- Desktop Title -->
+            <div class="hidden lg:block ml-4">
+                <h2 class="text-xl font-semibold text-white/90">
+                    <?= isset($title) ? str_replace(' - E-Fatura Pro', '', $title) : 'Dashboard' ?>
+                </h2>
             </div>
 
             <!-- Right Side Actions -->
@@ -198,6 +200,11 @@
                     <i class="fas fa-home w-5"></i>
                     <span>Dashboard</span>
                 </a>
+                <a href="/mukellef"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/mukellef') ? $active_class : $inactive_class ?>">
+                    <i class="fas fa-search w-5"></i>
+                    <span>Sorgula</span>
+                </a>
                 <a href="/fatura"
                     class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/fatura') && $current_uri != '/fatura/yeni' ? $active_class : $inactive_class ?>">
                     <i class="fas fa-file-invoice w-5"></i>
@@ -212,6 +219,11 @@
                     class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/cari') ? $active_class : $inactive_class ?>">
                     <i class="fas fa-users w-5"></i>
                     <span>Müşteriler</span>
+                </a>
+                <a href="/hizmetler"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/hizmetler') ? $active_class : $inactive_class ?>">
+                    <i class="fas fa-box w-5"></i>
+                    <span>Hizmetler</span>
                 </a>
                 <a href="/raporlar"
                     class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/raporlar') ? $active_class : $inactive_class ?>">
@@ -231,16 +243,35 @@
 
         <!-- User Profile -->
         <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10 safe-bottom">
+            <?php
+            $user = \App\Core\Session::get('user');
+            $is_edm = !($user['is_local'] ?? true);
+            $initials = '';
+            if (!empty($user['name'])) {
+                $parts = explode(' ', $user['name']);
+                foreach ($parts as $p)
+                    $initials .= mb_substr($p, 0, 1);
+            }
+            $initials = mb_strtoupper($initials);
+            ?>
             <div class="flex items-center gap-3">
-                <div
-                    class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center font-bold">
-                    DE
-                </div>
+                <?php if ($is_edm): ?>
+                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1.5 shadow-lg shadow-white/5 overflow-hidden">
+                        <img src="/assets/img/edm-logo.png" alt="EDM" class="w-full h-full object-contain">
+                    </div>
+                <?php else: ?>
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center font-bold text-sm">
+                        <?= $initials ?: '?' ?>
+                    </div>
+                <?php endif; ?>
+
                 <div class="flex-1">
-                    <p class="font-medium text-sm">Dursun Erdoğdu</p>
-                    <p class="text-xs text-gray-400">Admin</p>
+                    <p class="font-medium text-sm truncate"><?= htmlspecialchars($user['name'] ?? 'Misafir') ?></p>
+                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                        <?= $is_edm ? 'EDM BİLİŞİM' : 'SİSTEM ADMİN' ?>
+                    </p>
                 </div>
-                <a href="/logout" class="text-gray-400 hover:text-red-400 transition">
+                <a href="/logout" class="text-gray-400 hover:text-red-400 transition ml-1" title="Çıkış Yap">
                     <i class="fas fa-sign-out-alt"></i>
                 </a>
             </div>

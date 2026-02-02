@@ -1,0 +1,11 @@
+{
+    "698010be6fff5": {
+        "id": "698010be6fff5",
+        "name": "Nakliye Hizmet Bedeli",
+        "price": 0,
+        "tax": 20,
+        "unit": "ADET",
+        "is_default": true,
+        "created_at": "2026-02-02 05:49:34"
+    }
+}

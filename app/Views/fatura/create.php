@@ -15,7 +15,7 @@
         <input type="hidden" name="_csrf_token" value="<?= $csrf_token ?? '' ?>">
 
         <!-- Alıcı Bilgileri -->
-        <div class="glass rounded-2xl p-6 relative z-10">
+        <div class="glass rounded-2xl p-6 relative z-30">
             <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
                 <i class="fas fa-user text-blue-400"></i>
                 Alıcı Bilgileri
@@ -28,9 +28,14 @@
                         <input type="text" name="vkn" id="vkn" required maxlength="11"
                             class="flex-1 bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-blue-500"
                             placeholder="VKN giriniz" onblur="if(this.value.length >= 10) sorgulaVKN()">
-                        <button type="button" onclick="sorgulaVKN()"
-                            class="px-4 bg-blue-500 rounded-xl hover:bg-blue-600 transition" title="VKN ile Sorgula">
-                            <i class="fas fa-search"></i>
+                        <button type="button" id="vkn_sorgu_btn" onclick="sorgulaVKN()"
+                            class="px-4 bg-blue-500 rounded-xl hover:bg-blue-600 transition flex items-center justify-center min-w-[50px] relative overflow-hidden group/vknbtn"
+                            title="VKN ile Sorgula">
+                            <i class="fas fa-search transition-transform group-hover/vknbtn:scale-125"></i>
+                            <div id="vkn_loader"
+                                class="hidden absolute inset-0 bg-blue-600 flex items-center justify-center">
+                                <i class="fas fa-circle-notch fa-spin"></i>
+                            </div>
                         </button>
                     </div>
                 </div>
@@ -41,18 +46,23 @@
                         <input type="text" name="unvan" id="unvan" required autocomplete="off"
                             class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-blue-500 focus:bg-gray-800"
                             placeholder="Firma ünvanı yazarak arayın..." oninput="handleTitleInput(this.value)">
-                        
+
                         <!-- Small Ring Spinner CSS for this page -->
                         <style>
                             .small-ring-spinner {
                                 width: 20px;
                                 height: 20px;
                                 border: 2px solid rgba(255, 255, 255, 0.1);
-                                border-top-color: #3b82f6; 
+                                border-top-color: #3b82f6;
                                 border-radius: 50%;
                                 animation: spin 0.8s linear infinite;
                             }
-                            @keyframes spin { to { transform: rotate(360deg); } }
+
+                            @keyframes spin {
+                                to {
+                                    transform: rotate(360deg);
+                                }
+                            }
                         </style>
 
                         <div id="title_suggestions"
@@ -60,7 +70,7 @@
                         </div>
                     </div>
                     <div id="title_loading" class="hidden absolute right-4 top-[38px]">
-                         <div class="small-ring-spinner"></div>
+                        <div class="small-ring-spinner"></div>
                     </div>
                 </div>
             </div>
@@ -77,7 +87,7 @@
         </div>
 
         <!-- Fatura Ayarları -->
-        <div class="glass rounded-2xl p-6">
+        <div class="glass rounded-2xl p-6 relative z-20">
             <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
                 <i class="fas fa-cog text-gray-400"></i>
                 Fatura Ayarları
@@ -112,7 +122,8 @@
                         </option>
                         <option value="610">610 - SPOR KULÜPLERİNİN YAYIN, REKLAM VE İSİM HAKKI GELİRLERİNE KONU
                             İŞLEMLERİ</option>
-                        <option value="611" >611 - TAŞIMACILIK HİZMETLERİ</option> <option value="612">612 - SERVİS
+                        <option value="611">611 - TAŞIMACILIK HİZMETLERİ</option>
+                        <option value="612">612 - SERVİS
                             TAŞIMACILIĞI HİZMETİ</option>
                         <option value="613">613 - BASILI KİTAP VE SÜRELİ YAYINLARIN TESLİMİ</option>
                         <option value="614">614 - HER TÜRLÜ BASKI VE BASIM HİZMETLERİ</option>
@@ -153,7 +164,7 @@
         </div>
 
         <!-- Hizmet/Ürün Detayı (Multi-Row) -->
-        <div class="glass rounded-2xl p-6">
+        <div class="glass rounded-2xl p-6 relative z-10">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-semibold flex items-center gap-2">
                     <i class="fas fa-box text-purple-400"></i>
@@ -201,15 +212,20 @@
 
         <!-- Actions -->
         <div class="flex flex-col lg:flex-row gap-4">
+            <div
+                class="flex-1 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-500 text-sm flex items-start gap-3">
+                <i class="fas fa-info-circle mt-1"></i>
+                <div>
+                    <p class="font-bold mb-1">Bilgi: Sadece Taslak Oluşturulur</p>
+                    <p class="text-xs opacity-80">Güvenliğiniz için bu uygulama üzerinden direkt fatura gönderimi
+                        kapalıdır. Oluşturulan taslakları <b>EDM Bilişim Portalı</b> üzerinden kontrol edip
+                        onaylayabilirsiniz.</p>
+                </div>
+            </div>
             <button type="submit" name="action" value="taslak"
-                class="flex-1 py-4 bg-white/10 rounded-xl font-semibold hover:bg-white/20 transition flex items-center justify-center gap-2">
+                class="lg:w-72 py-4 bg-blue-600 rounded-xl font-bold hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
                 <i class="fas fa-save"></i>
-                Taslak Olarak Kaydet
-            </button>
-            <button type="submit" name="action" value="gonder"
-                class="flex-1 py-4 bg-gradient-to-r from-green-500 to-green-600 rounded-xl font-semibold hover:shadow-lg hover:shadow-green-500/30 transition flex items-center justify-center gap-2">
-                <i class="fas fa-paper-plane"></i>
-                Faturayı Gönder
+                TASLAK OLUŞTUR
             </button>
         </div>
     </form>
@@ -254,14 +270,76 @@
     </div>
 </template>
 
+</script>
+
+<!-- Searchable Tevkifat Dropdown Logic & Default Service -->
 <script>
+    // Tevkifat Options Data
+    const tevkifatCodes = [
+        { code: '601', text: '601 - YAPIM İŞLERİ İLE BU İŞLERLE BİRLİKTE İFA EDİLEN MÜHENDİSLİK-MİMARLIK VE ETÜT-PROJE HİZMETLERİ' },
+        { code: '602', text: '602 - ETÜT, PLAN-PROJE, DANIŞMANLIK, DENETİM VE BENZERİ HİZMETLER' },
+        { code: '603', text: '603 - MAKİNE, TEÇHİZAT, DEMİRBAŞ VE TAŞITLARA AİT TADİL, BAKIM VE ONARIM HİZMETLERİ' },
+        { code: '604', text: '604 - YEMEK SERVİS HİZMETİ' },
+        { code: '605', text: '605 - ORGANİZASYON HİZMETİ' },
+        { code: '606', text: '606 - İŞGÜCÜ TEMİN HİZMETLERİ' },
+        { code: '607', text: '607 - ÖZEL GÜVENLİK HİZMETİ' },
+        { code: '608', text: '608 - YAPI DENETİM HİZMETLERİ' },
+        { code: '609', text: '609 - TURİSTİK MAĞAZALARA VERİLEN MÜŞTERİ BULMA / GÖTÜRME HİZMETLERİ' },
+        { code: '610', text: '610 - SPOR KULÜPLERİNİN YAYIN, REKLAM VE İSİM HAKKI GELİRLERİNE KONU İŞLEMLERİ' },
+        { code: '611', text: '611 - TAŞIMACILIK HİZMETLERİ' },
+        { code: '612', text: '612 - SERVİS TAŞIMACILIĞI HİZMETİ' },
+        { code: '613', text: '613 - BASILI KİTAP VE SÜRELİ YAYINLARIN TESLİMİ' },
+        { code: '614', text: '614 - HER TÜRLÜ BASKI VE BASIM HİZMETLERİ' },
+        { code: '615', text: '615 - HURDA VE ATIK TESLİMİ' },
+        { code: '616', text: '616 - METAL, PLASTİK, LASTİK, KAUÇUK, KAĞIT, CAM HURDA VE ATIKLARDAN ELDE EDİLEN HAMMADDE TESLİMİ' },
+        { code: '617', text: '617 - PAMUK, TİFTİK, YÜN VE YAPAĞI İLE HAM POST VE DERİ TESLİMLERİ' },
+        { code: '618', text: '618 - AĞAÇ VE ORMAN ÜRÜNLERİ TESLİMİ' },
+        { code: '619', text: '619 - ÇİNKO, ALÜMİNYUM VE KURŞUN KÜLÇE TESLİMİ' },
+        { code: '620', text: '620 - BAKIR, ÇİNKO, ALÜMİNYUM VE KURŞUN ÜRÜNLERİNİN TESLİMİ' },
+        { code: '621', text: '621 - İKİNCİ EL MOTORLU KARA TAŞITI TİCARETİYLE İŞTİGAL EDEN MÜKELLEFLERCE %18 KDV ORANI UYGULANARAK YAPILAN ARAÇ TESLİMLERİ' },
+        { code: '622', text: '622 - DİĞER HİZMETLER' },
+        { code: '623', text: '623 - DİĞER TESLİMLER' },
+        { code: '624', text: '624 - YÜK TAŞIMACILIĞI HİZMETİ', selected: true },
+        { code: '625', text: '625 - TİCARİ REKLAM HİZMETLERİ' },
+        { code: '626', text: '626 - KÜLÇE METAL TESLİMLERİ' },
+        { code: '627', text: '627 - DEMİR-ÇELİK ÜRÜNLERİNİN TESLİMİ' }
+    ];
+
     let rowCount = 0;
+    let defaultService = null;
 
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
-        addRow(); // Add first row
-        calculateTotals(); // Calculate initial totals
-        toggleTevkifat(); // Set initial tevkifat visibility
+        // Fetch Default Service
+        fetch('/api/hizmet/varsayilan')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    defaultService = data.service;
+                }
+                addRow(); // Add first row AFTER fetching default service (or trying to)
+                calculateTotals();
+            })
+            .catch(() => {
+                addRow(); // Fallback
+                calculateTotals();
+            });
+
+        toggleTevkifat();
+        initTevkifatDropdown();
+
+        // Check URL Params for Pre-fill (From Mukellef Sorgula)
+        const urlParams = new URLSearchParams(window.location.search);
+        const preVkn = urlParams.get('vkn');
+        const preUnvan = urlParams.get('unvan');
+
+        if (preVkn) {
+            document.getElementById('vkn').value = preVkn;
+            if (preUnvan) document.getElementById('unvan').value = preUnvan;
+
+            // Auto-trigger validation/badge
+            sorgulaVKN();
+        }
     });
 
     function addRow() {
@@ -269,13 +347,25 @@
         const container = document.getElementById('items-container');
         const clone = template.content.cloneNode(true);
 
-        // Rplace placeholders
-        const html = clone.querySelector('div').outerHTML.replace(/{index}/g, rowCount++);
+        // Replace placeholders
+        let html = clone.querySelector('div').outerHTML.replace(/{index}/g, rowCount++);
 
-        // Append
+        // Insert HTML
         container.insertAdjacentHTML('beforeend', html);
 
-        // Add listeners to new inputs if needed
+        // If we have default service, fill the NEW row
+        if (defaultService) {
+            const newRow = container.lastElementChild;
+            const nameInput = newRow.querySelector('[name*="[name]"]');
+            const priceInput = newRow.querySelector('[name*="[price]"]');
+            const taxInput = newRow.querySelector('[name*="[tax]"]');
+
+            if (nameInput) nameInput.value = defaultService.name;
+            if (priceInput) priceInput.value = defaultService.price;
+            if (taxInput) taxInput.value = defaultService.tax;
+
+            calculateTotals();
+        }
     }
 
     function removeRow(btn) {
@@ -333,16 +423,106 @@
         }
     }
 
+    /* Custom Searchable Dropdown for Tevkifat */
+    function initTevkifatDropdown() {
+        const container = document.getElementById('tevkifat_container');
+        // Hide original select but keep it for form submission
+        const originalSelect = document.getElementById('tevkifat_kodu');
+        originalSelect.classList.add('hidden');
+
+        // Create Custom UI
+        const customUI = document.createElement('div');
+        customUI.className = 'relative group';
+        customUI.innerHTML = `
+            <div id="tk_trigger" class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white flex justify-between items-center cursor-pointer hover:bg-white/10 transition" onclick="toggleTkDropdown()">
+                <span id="tk_selected_text" class="truncate pr-4 text-sm">Seçiniz...</span>
+                <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform" id="tk_arrow"></i>
+            </div>
+            
+            <div id="tk_dropdown" class="hidden absolute top-full left-0 right-0 mt-2 bg-[#1e293b] border border-white/10 rounded-xl shadow-2xl z-50 max-h-60 flex flex-col">
+                <div class="p-2 border-b border-white/5 sticky top-0 bg-[#1e293b] rounded-t-xl">
+                    <input type="text" id="tk_search" placeholder="Kodu veya adı ile ara..." 
+                           class="w-full bg-black/20 border border-white/5 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-blue-500"
+                           oninput="filterTkOptions(this.value)">
+                </div>
+                <div id="tk_options" class="overflow-y-auto flex-1 p-1 space-y-1 custom-scrollbar">
+                    <!-- Options injected here -->
+                </div>
+            </div>
+        `;
+
+        container.appendChild(customUI);
+
+        // Populate Options
+        const optionsList = document.getElementById('tk_options');
+        tevkifatCodes.forEach(opt => {
+            const div = document.createElement('div');
+            div.className = 'p-2 rounded-lg hover:bg-white/5 cursor-pointer text-sm text-gray-300 hover:text-white transition';
+            div.textContent = opt.text;
+            div.dataset.code = opt.code;
+            div.onclick = () => selectTkOption(opt.code, opt.text);
+            optionsList.appendChild(div);
+
+            if (opt.selected) selectTkOption(opt.code, opt.text); // Default selection
+        });
+
+        // Close on click outside
+        document.addEventListener('click', (e) => {
+            if (!customUI.contains(e.target)) {
+                document.getElementById('tk_dropdown').classList.add('hidden');
+                document.getElementById('tk_arrow').classList.remove('rotate-180');
+            }
+        });
+    }
+
+    function toggleTkDropdown() {
+        const dd = document.getElementById('tk_dropdown');
+        const arrow = document.getElementById('tk_arrow');
+        const search = document.getElementById('tk_search');
+
+        dd.classList.toggle('hidden');
+        arrow.classList.toggle('rotate-180');
+
+        if (!dd.classList.contains('hidden')) {
+            setTimeout(() => search.focus(), 100);
+        }
+    }
+
+    function filterTkOptions(query) {
+        const lowerQ = query.toLowerCase();
+        const options = document.getElementById('tk_options').children;
+
+        Array.from(options).forEach(opt => {
+            const text = opt.textContent.toLowerCase();
+            if (text.includes(lowerQ)) {
+                opt.style.display = 'block';
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+    }
+
+    function selectTkOption(code, text) {
+        const originalSelect = document.getElementById('tevkifat_kodu');
+        originalSelect.value = code; // Update hidden select
+
+        document.getElementById('tk_selected_text').textContent = text;
+        document.getElementById('tk_dropdown').classList.add('hidden');
+        document.getElementById('tk_arrow').classList.remove('rotate-180');
+    }
+
     function checkAutoTevkifat(grandTotal) {
         const typeSelect = document.getElementById('fatura_tipi');
-        const tevkifatSelect = document.getElementById('tevkifat_kodu');
-
-        // Only auto-switch if currently SATIS
+        // Only switch if currently SATIS
         if (grandTotal >= 12000) {
             if (typeSelect.value === 'SATIS') {
                 typeSelect.value = 'TEVKIFAT';
                 toggleTevkifat();
-                tevkifatSelect.value = '624'; // Default requested code
+
+                // Switch dropdown to 624
+                const defaultCode = '624';
+                const defaultOpt = tevkifatCodes.find(t => t.code === defaultCode);
+                if (defaultOpt) selectTkOption(defaultCode, defaultOpt.text);
 
                 Swal.fire({
                     icon: 'info',
@@ -353,147 +533,109 @@
         }
     }
 
-    // Reuse existing VKN/Title search functions...
-    // Only keeping them for context, logic remains same.
-
-    // VKN Sorgula
+    // Reuse existing VKN/Title search logic...
     function sorgulaVKN() {
         const vkn = document.getElementById('vkn').value;
-        const btn = document.querySelector('button[onclick="sorgulaVKN()"]');
+        const btn = document.getElementById('vkn_sorgu_btn');
+        const loader = document.getElementById('vkn_loader');
 
         if (!vkn || vkn.length < 10) return;
 
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        }
+        // Sexy Loading Start
+        btn.disabled = true;
+        loader.classList.remove('hidden');
+        btn.classList.add('animate-pulse');
 
         const formData = new FormData();
         formData.append('vkn', vkn);
-
         fetch('/api/vkn/sorgula', { method: 'POST', body: formData })
             .then(res => res.json())
             .then(data => {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-search"></i>';
-                }
-
+                // Sexy Loading End
+                btn.disabled = false;
+                loader.classList.add('hidden');
+                btn.classList.remove('animate-pulse');
                 if (data.success && data.mukellef) {
                     document.getElementById('unvan').value = data.mukellef.unvan || '';
-                    if (data.mukellef.adres) document.getElementById('adres').value = data.mukellef.adres; // If available
-
-                    updateBadge(data.mukellef.type, data.mukellef.alias);
+                    if (data.mukellef.adres) document.getElementById('adres').value = data.mukellef.adres;
+                    updateBadge(data.mukellef.type, data.mukellef.alias, data.mukellef.is_local);
                     Swal.fire({
                         icon: 'success', title: 'Mükellef Bulundu',
-                        text: `${data.mukellef.unvan}`, timer: 1500, showConfirmButton: false,
-                        toast: true, position: 'top-end'
+                        text: `${data.mukellef.unvan} ${data.mukellef.is_local ? '(Rehberden)' : ''}`,
+                        timer: 1500, showConfirmButton: false, toast: true, position: 'top-end'
                     });
-                } else {
-                    document.getElementById('alici_bilgi').innerHTML = '';
-                }
+                } else { document.getElementById('alici_bilgi').innerHTML = ''; }
             })
-            .catch(err => {
-                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-search"></i>'; }
-            });
+            .catch(err => { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-search"></i>'; } });
     }
 
-    // Inline Title Search Logic
     let searchTimeout;
     const suggestionsBox = document.getElementById('title_suggestions');
-
     function handleTitleInput(query) {
         clearTimeout(searchTimeout);
-        if (query.length < 3) {
-            suggestionsBox.classList.add('hidden');
-            return;
-        }
-
+        if (query.length < 3) { suggestionsBox.classList.add('hidden'); return; }
         document.getElementById('title_loading').classList.remove('hidden');
-
         searchTimeout = setTimeout(() => {
-            const formData = new FormData();
-            formData.append('q', query);
-
+            const formData = new FormData(); formData.append('q', query);
             fetch('/api/mukellef/ara', { method: 'POST', body: formData })
-                .then(res => res.json())
-                .then(data => {
+                .then(res => res.json()).then(data => {
                     document.getElementById('title_loading').classList.add('hidden');
-
                     if (data.success && data.data.length > 0) {
                         let html = '';
                         data.data.forEach(user => {
-                            if (!user) return; // Safety check
-
-                            // Safe escape for onclick
-                            const safeUnvan = user.unvan ? user.unvan.replace(/'/g, "\\'") : '';
+                            if (!user) return;
+                            const safeUnvan = user.unvan ? user.unvan.replace(/'/g, "\\'").replace(/\n/g, ' ') : '';
                             const safeVkn = user.vkn || '';
                             const safeAlias = user.alias || '';
                             const safeType = user.type || 'UNKNOWN';
+                            const safeAdres = user.adres ? user.adres.replace(/'/g, "\\'").replace(/\n/g, ' ') : '';
+                            const isLocal = user.is_local ? true : false;
 
-                            html += `
-                            <div class="p-3 border-b border-white/5 hover:bg-white/10 cursor-pointer transition flex justify-between items-center group"
-                                 onclick="selectSuggestion('${safeVkn}', '${safeUnvan}', '${safeAlias}', '${safeType}')">
+                            html += `<div class="p-3 border-b border-white/5 hover:bg-white/10 cursor-pointer transition flex justify-between items-center group" onclick="selectSuggestion('${safeVkn}', '${safeUnvan}', '${safeAlias}', '${safeType}', '${safeAdres}', ${isLocal})">
                                 <div>
-                                    <div class="font-semibold text-sm group-hover:text-blue-400 transition">${user.unvan}</div>
+                                    <div class="font-semibold text-sm group-hover:text-blue-400 transition flex items-center gap-2">
+                                        ${user.unvan}
+                                        ${isLocal ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 font-bold border border-amber-500/20">REHBER</span>' : ''}
+                                    </div>
                                     <div class="text-xs text-gray-500 mt-0.5">VKN: ${user.vkn}</div>
                                 </div>
-                                <span class="text-xs px-2 py-1 rounded bg-white/5 ${safeType === 'OZEL' ? 'text-purple-400' : 'text-blue-400'}">
-                                    ${safeType}
-                                </span>
+                                <span class="text-xs px-2 py-1 rounded bg-white/5 ${safeType === 'OZEL' ? 'text-purple-400' : 'text-blue-400'}">${safeType}</span>
                             </div>`;
                         });
-                        suggestionsBox.innerHTML = html;
-                        suggestionsBox.classList.remove('hidden');
-                    } else {
-                        suggestionsBox.classList.add('hidden');
-                    }
-                })
-                .catch(() => {
-                    suggestionsBox.classList.add('hidden');
-                    document.getElementById('title_loading').classList.add('hidden');
-                });
+                        suggestionsBox.innerHTML = html; suggestionsBox.classList.remove('hidden');
+                    } else { suggestionsBox.classList.add('hidden'); }
+                }).catch(() => { suggestionsBox.classList.add('hidden'); document.getElementById('title_loading').classList.add('hidden'); });
         }, 500);
     }
-
-    function selectSuggestion(vkn, unvan, alias, type) {
+    function selectSuggestion(vkn, unvan, alias, type, adres = '', isLocal = false) {
         document.getElementById('vkn').value = vkn;
         document.getElementById('unvan').value = unvan;
+        if (adres) document.getElementById('adres').value = adres;
         suggestionsBox.classList.add('hidden');
-        updateBadge(type, alias);
+        updateBadge(type, alias, isLocal);
     }
-
-    function updateBadge(type, alias) {
+    function updateBadge(type, alias, isLocal = false) {
         const typeBadge = document.getElementById('alici_bilgi');
         if (!typeBadge) return;
-
         const typeClass = type === 'OZEL' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400';
-        typeBadge.innerHTML = `
-            <div class="flex items-start gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
-                <div class="${type === 'OZEL' ? 'bg-purple-500' : 'bg-blue-500'} w-2 h-2 rounded-full mt-2"></div>
-                <div>
-                    <h4 class="text-sm font-semibold text-white">E-Fatura Mükellefi</h4>
-                    <p class="text-xs text-gray-400 mt-1">Alias: ${alias || 'Varsayılan'}</p>
-                    <span class="inline-block mt-2 text-[10px] uppercase tracking-wider ${type === 'OZEL' ? 'text-purple-400' : 'text-blue-400'}">
-                        ${type} SENARYO
-                    </span>
-                </div>
-            </div>`;
+        typeBadge.innerHTML = `<div class="flex items-start gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
+            <div class="${type === 'OZEL' ? 'bg-purple-500' : 'bg-blue-500'} w-2 h-2 rounded-full mt-2"></div>
+            <div>
+                <h4 class="text-sm font-semibold text-white flex items-center gap-2">
+                    E-Fatura Mükellefi
+                    ${isLocal ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 font-bold border border-amber-500/20">YENİ DEĞİL (REHBERDE)</span>' : ''}
+                </h4>
+                <p class="text-xs text-gray-400 mt-1">Alias: ${alias || 'Varsayılan'}</p>
+                <span class="inline-block mt-2 text-[10px] uppercase tracking-wider ${type === 'OZEL' ? 'text-purple-400' : 'text-blue-400'}">${type} SENARYO</span>
+            </div>
+        </div>`;
     }
-
     document.addEventListener('click', function (e) {
-        if (!document.getElementById('unvan').contains(e.target) && !suggestionsBox.contains(e.target)) {
-            suggestionsBox.classList.add('hidden');
-        }
+        if (!document.getElementById('unvan').contains(e.target) && !suggestionsBox.contains(e.target)) { suggestionsBox.classList.add('hidden'); }
     });
-
     function validateForm() {
-        // Basic validation
         const vkn = document.getElementById('vkn').value;
-        if (vkn.length < 10) {
-            Swal.fire('Hata', 'Geçerli bir VKN/TCKN giriniz.', 'error');
-            return false;
-        }
+        if (vkn.length < 10) { Swal.fire('Hata', 'Geçerli bir VKN/TCKN giriniz.', 'error'); return false; }
         return true;
     }
 </script>

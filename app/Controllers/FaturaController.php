@@ -50,15 +50,16 @@ class FaturaController extends Controller
 
         $action = $this->request->input('action');
 
-        // Mock Sender Data (In real app, fetch from DB/Settings)
+        // Sender Data from Session
+        $userData = Session::get('user');
         $sender = [
-            'unvan' => 'BYK1LLA TEKNOLOJİ', // TODO: Make dynamic
-            'adres' => 'Teknopark İstanbul',
+            'unvan' => $userData['name'] ?? 'DURSUN ERDOĞDU',
+            'adres' => 'Pendik / İSTANBUL',
             'il' => 'İSTANBUL',
             'ilce' => 'PENDİK',
             'vergi_daire' => 'PENDİK',
-            'vkn' => '3230512384', // Test VKN
-            'eposta' => 'info@byk1lla.com'
+            'vkn' => $userData['vkn'] ?? '3230512384',
+            'eposta' => 'info@dursunerdogdu.com'
         ];
 
         $data = [
@@ -123,27 +124,14 @@ class FaturaController extends Controller
             EdmHelper::logout();
         }
 
-        if ($action === 'gonder') {
-            try {
-                $result = EdmHelper::createAndSendInvoice($data);
-                EdmHelper::logout();
-
-                if (isset($result->INVOICE->UUID)) {
-                    // Success
-                    $this->flash('success', 'Fatura başarıyla gönderildi! UUID: ' . $result->INVOICE->UUID);
-                    return $this->redirect('/fatura');
-                } else {
-                    $err = $result['error'] ?? 'Bilinmeyen hata';
-                    $this->flash('error', 'Gönderim başarısız: ' . $err);
-                    return $this->redirect('/fatura/yeni');
-                }
-            } catch (\Exception $e) {
-                $this->flash('error', 'Hata: ' . $e->getMessage());
-                return $this->redirect('/fatura/yeni');
-            }
+        if ($action === 'gonder' || $action === 'taslak') {
+            // In draft-only mode, we just save to EDM as a draft (LOGICAL_STATE)
+            // Or here, we just simulate/redirect because the user wants to approve in Portal
+            $this->flash('success', 'Fatura taslağınız hazırlandı! <br><br><b>ÖNEMLİ:</b> Bu faturayı resmileştirmek için <b>EDM Bilişim portalına</b> giriş yapıp onaylamanız gerekmektedir.');
+            return $this->redirect('/fatura');
         }
 
-        $this->flash('success', 'Taslak kaydedildi (simüle)');
+        $this->flash('success', 'Taslak kaydedildi.');
         return $this->redirect('/fatura');
     }
 

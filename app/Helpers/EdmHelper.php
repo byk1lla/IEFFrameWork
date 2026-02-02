@@ -145,11 +145,17 @@ class EdmHelper
             if (is_array($inbox) && !isset($inbox['error'])) {
                 $stats['toplam_gelen'] = count($inbox);
             }
-
-            // Giden faturalar - SDK returns array directly
+            // Giden faturalar
             $outbox = self::getOutgoingInvoices(date('Y-m-d', strtotime('-30 days')), date('Y-m-d'), 100);
             if (is_array($outbox) && !isset($outbox['error'])) {
                 $stats['toplam_giden'] = count($outbox);
+
+                // Auto-discover own VKN if missing in session
+                if (!empty($outbox[0]['SENDER']) && empty(\App\Core\Session::get('user')['vkn'])) {
+                    $u = \App\Core\Session::get('user');
+                    $u['vkn'] = $outbox[0]['SENDER'];
+                    \App\Core\Session::set('user', $u);
+                }
 
                 foreach ($outbox as $inv) {
                     // inv is associative array with keys like PAYABLE_AMOUNT, STATUS, etc.
@@ -376,27 +382,75 @@ class EdmHelper
     }
 
     /**
-     * Fatura Durumu Sorgula
+     * Mükellef Detaylarını Getir (Zenginleştirilmiş)
      */
-    public static function checkInvoiceStatus($uuid)
+    public static function getRecipientDetails($vkn)
     {
         try {
             $client = self::getClient();
             if (!self::$loggedIn)
                 self::login();
 
-            // SDK doesn't have a direct checkStatus method usually exposed easily locally for single UUID?
-            // Usually we use getSingleInvoice for status.
-            $inv = self::getInvoiceDetail($uuid);
-            if ($inv && is_object($inv) && isset($inv->HEADER->STATUS)) {
-                return [
-                    'status' => $inv->HEADER->STATUS,
-                    'desc' => $inv->HEADER->STATUS_DESCRIPTION ?? ''
-                ];
+            // SDK checkUser returns details like TITLE, IDENTIFIER, etc.
+            $result = $client->checkUser($vkn);
+
+            // If it's a list (array), pick the first one
+            if (is_array($result) && !empty($result)) {
+                $result = $result[0];
             }
-            return ['status' => 'UNKNOWN', 'desc' => 'Status could not be fetched'];
+
+            // More details might be available in different SDK methods or via getTurmob if exposed
+            // For now, normalize what we have
+            if (!$result)
+                return null;
+
+            return (object) [
+                'sonuc' => true,
+                'vkn' => is_object($result) ? ($result->IDENTIFIER ?? $vkn) : ($result['IDENTIFIER'] ?? $vkn),
+                'unvan' => is_object($result) ? ($result->TITLE ?? '') : ($result['TITLE'] ?? ''),
+                'adres' => is_object($result) ? ($result->ADDRESS ?? '') : ($result['ADDRESS'] ?? ''),
+                'vergi_dairesi' => is_object($result) ? ($result->TAX_OFFICE ?? '') : ($result['TAX_OFFICE'] ?? ''),
+                'sehir' => is_object($result) ? ($result->CITY ?? '') : ($result['CITY'] ?? ''),
+                'ulke' => is_object($result) ? ($result->COUNTRY ?? 'TÜRKİYE') : ($result['COUNTRY'] ?? 'TÜRKİYE'),
+                'tip' => is_object($result) ? ($result->TYPE ?? '') : ($result['TYPE'] ?? ''),
+                'alias' => is_object($result) ? ($result->ALIAS ?? '') : ($result['ALIAS'] ?? ''),
+                'kayit_tarihi' => is_object($result) ? ($result->SYSTEM_CREATE_TIME ?? '') : ($result['SYSTEM_CREATE_TIME'] ?? ''),
+            ];
         } catch (\Exception $e) {
-            return ['error' => $e->getMessage()];
+            return null;
+        }
+    }
+
+    /**
+     * Son Faturalardan Önerilen Carileri Getir
+     */
+    public static function getRecentRecipients($limit = 10)
+    {
+        try {
+            // Giden faturaları çek
+            $outbox = self::getOutgoingInvoices(null, null, 100);
+            if (!is_array($outbox) || isset($outbox['error']))
+                return [];
+
+            $recipients = [];
+            foreach ($outbox as $inv) {
+                // SDK Keys are RECEIVER (VKN) and CUSTOMER (Title)
+                $vkn = $inv['RECEIVER'] ?? null;
+                $unvan = $inv['CUSTOMER'] ?? null;
+
+                if ($vkn && $unvan && !isset($recipients[$vkn])) {
+                    $recipients[$vkn] = [
+                        'vkn' => $vkn,
+                        'unvan' => $unvan,
+                        'last_date' => $inv['ISSUE_DATE'] ?? ''
+                    ];
+                    if (count($recipients) >= $limit)
+                        break;
+                }
+            }
+            return array_values($recipients);
+        } catch (\Exception $e) {
+            return [];
         }
     }
 }

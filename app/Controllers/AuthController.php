@@ -47,6 +47,7 @@ class AuthController extends Controller
                     'username' => $username,
                     'name' => self::LOCAL_ADMIN['name'],
                     'role' => self::LOCAL_ADMIN['role'],
+                    'vkn' => '56359306232', // Dursun Erdoğdu VKN
                     'is_local' => true,
                     'is_admin' => true
                 ]);
@@ -80,6 +81,7 @@ class AuthController extends Controller
                     'id' => 'edm_' . $username,
                     'username' => $username,
                     'name' => $username,
+                    'vkn' => is_numeric($username) ? $username : '', // Username VKN ise ata
                     'role' => 'user',
                     'is_local' => false,
                     'is_admin' => false

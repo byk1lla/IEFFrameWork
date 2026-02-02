@@ -19,6 +19,44 @@
             class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-purple-500">
     </div>
 
+    <!-- Cari Önerileri (Smart Recommendations) -->
+    <?php if (!empty($oneriler)): ?>
+        <div class="space-y-4">
+            <div class="flex items-center gap-2 px-2">
+                <i class="fas fa-magic text-purple-400"></i>
+                <h2 class="text-lg font-semibold text-gray-200">Cari Önerileri</h2>
+                <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">Yeni</span>
+            </div>
+            <div class="flex overflow-x-auto gap-4 pb-4 no-scrollbar">
+                <?php foreach ($oneriler as $one): ?>
+                    <?php if (!isset($cariler[$one['vkn']])): ?>
+                        <div
+                            class="glass min-w-[280px] p-4 rounded-2xl border-purple-500/10 hover:border-purple-500/30 transition group shrink-0">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center text-purple-400">
+                                    <i class="fas fa-building text-sm"></i>
+                                </div>
+                                <a href="/cari/yeni?vkn=<?= $one['vkn'] ?>&unvan=<?= urlencode($one['unvan']) ?>"
+                                    class="text-xs font-bold text-purple-400 hover:text-white bg-purple-500/10 hover:bg-purple-500 px-3 py-1.5 rounded-lg transition">
+                                    REHBERE EKLE
+                                </a>
+                            </div>
+                            <h4 class="font-semibold text-sm text-white truncate mb-1"
+                                title="<?= htmlspecialchars($one['unvan']) ?>">
+                                <?= htmlspecialchars($one['unvan']) ?>
+                            </h4>
+                            <p class="text-xs text-gray-500 font-mono"><?= $one['vkn'] ?></p>
+                            <div class="mt-3 flex items-center gap-2 text-[10px] text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-clock"></i>
+                                Son İşlem: <?= date('d.m.Y', strtotime($one['last_date'])) ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <!-- Cari Grid -->
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="cariGrid">
         <?php if (empty($cariler)): ?>
