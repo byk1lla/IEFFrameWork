@@ -180,4 +180,87 @@ class ApiController extends Controller
 
         return $this->json(['success' => true, 'data' => $results]);
     }
+
+    /**
+     * Fatura Detayı Getir
+     */
+    public function faturaDetay($uuid)
+    {
+        if (empty($uuid)) {
+            return $this->json(['success' => false, 'error' => 'UUID geçersiz']);
+        }
+
+        try {
+            $detail = EdmHelper::getInvoiceDetail($uuid);
+            EdmHelper::logout();
+
+            if ($detail && !isset($detail['error'])) {
+                return $this->json(['success' => true, 'data' => $detail]);
+            }
+
+            return $this->json(['success' => false, 'error' => $detail['error'] ?? 'Fatura bulunamadı']);
+
+        } catch (\Exception $e) {
+            return $this->json(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Ünvan ile Mükellef Ara
+     */
+    public function mukellefAra()
+    {
+        $query = $this->request->input('q') ?? '';
+
+        if (empty($query) || strlen($query) < 3) {
+            return $this->json(['success' => false, 'error' => 'En az 3 karakter giriniz']);
+        }
+
+        try {
+            $results = EdmHelper::searchTaxpayerByName($query);
+            EdmHelper::logout();
+
+            $formatted = [];
+            if ($results && is_array($results)) {
+                foreach ($results as $user) {
+                    $formatted[] = [
+                        'vkn' => is_object($user) ? ($user->IDENTIFIER ?? '') : ($user['IDENTIFIER'] ?? ''),
+                        'unvan' => is_object($user) ? ($user->TITLE ?? '') : ($user['TITLE'] ?? ''),
+                        'type' => is_object($user) ? ($user->TYPE ?? '') : ($user['TYPE'] ?? ''),
+                        'alias' => is_object($user) ? ($user->ALIAS ?? '') : ($user['ALIAS'] ?? '')
+                    ];
+                }
+            }
+
+            return $this->json(['success' => true, 'data' => $formatted]);
+
+        } catch (\Exception $e) {
+            return $this->json(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * PDF İndir
+     */
+    public function downloadPdf($uuid)
+    {
+        if (empty($uuid))
+            die('UUID gerekli');
+
+        try {
+            $pdfContent = EdmHelper::getInvoicePdf($uuid);
+            EdmHelper::logout();
+
+            if ($pdfContent) {
+                header('Content-Type: application/pdf');
+                header('Content-Disposition: inline; filename="fatura_' . $uuid . '.pdf"');
+                echo $pdfContent;
+                exit;
+            } else {
+                die('PDF bulunamadı');
+            }
+        } catch (\Exception $e) {
+            die('Hata: ' . $e->getMessage());
+        }
+    }
 }

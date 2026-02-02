@@ -139,22 +139,42 @@
 </head>
 
 <body class="text-gray-100 antialiased">
-    <!-- Mobile Header -->
-    <header class="lg:hidden fixed top-0 left-0 right-0 z-50 glass safe-top">
-        <div class="flex items-center justify-between px-4 py-3">
-            <button id="menuToggle" class="text-2xl">
+    <!-- Header (Mobile + Desktop) -->
+    <header class="fixed top-0 left-0 right-0 lg:left-72 z-40 glass safe-top transition-all duration-300">
+        <div class="flex items-center justify-between px-4 py-3 h-16">
+            <button id="menuToggle" class="text-2xl lg:hidden">
                 <i class="fas fa-bars"></i>
             </button>
-            <h1 class="text-lg font-semibold text-primary-400">
+            <h1 class="text-lg font-semibold text-primary-400 lg:hidden">
                 <i class="fas fa-file-invoice"></i> E-Fatura Pro
             </h1>
-            <button class="relative">
-                <i class="fas fa-bell text-xl"></i>
-                <span
-                    class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-xs flex items-center justify-center">3</span>
-            </button>
+            <!-- Desktop Title (Optional, or keep empty if title is in page content) -->
+            <div class="hidden lg:block">
+                <!-- Breadcrumb or Page Title can go here -->
+            </div>
+
+            <!-- Right Side Actions -->
+            <div class="flex items-center gap-3">
+                <!-- Notification Removed as per request -->
+
+                <!-- Mobile Profile/Logout could go here if needed, but sidebar has it. -->
+            </div>
         </div>
     </header>
+
+    <?php
+    $current_uri = $_SERVER['REQUEST_URI'] ?? '/';
+    $is_active = function ($path) use ($current_uri) {
+        if ($path === '/' && $current_uri === '/')
+            return true;
+        if ($path !== '/' && strpos($current_uri, $path) === 0)
+            return true;
+        return false;
+    };
+
+    $active_class = 'bg-primary-500/20 text-primary-400 font-medium';
+    $inactive_class = 'hover:bg-white/5 opacity-70 hover:opacity-100 transition';
+    ?>
 
     <!-- Sidebar -->
     <aside id="sidebar" class="mobile-menu lg:translate-x-0 fixed top-0 left-0 h-full w-72 glass z-50 safe-top">
@@ -174,30 +194,35 @@
             <!-- Navigation -->
             <nav class="space-y-2">
                 <a href="/"
-                    class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary-500/20 text-primary-400 font-medium">
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/') && $current_uri == '/' ? $active_class : $inactive_class ?>">
                     <i class="fas fa-home w-5"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="/fatura" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition">
+                <a href="/fatura"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/fatura') && $current_uri != '/fatura/yeni' ? $active_class : $inactive_class ?>">
                     <i class="fas fa-file-invoice w-5"></i>
                     <span>Faturalar</span>
                 </a>
-                <a href="/fatura/yeni" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition">
+                <a href="/fatura/yeni"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/fatura/yeni') ? $active_class : $inactive_class ?>">
                     <i class="fas fa-plus-circle w-5"></i>
                     <span>Yeni Fatura</span>
                 </a>
-                <a href="/cari" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition">
+                <a href="/cari"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/cari') ? $active_class : $inactive_class ?>">
                     <i class="fas fa-users w-5"></i>
-                    <span>Cariler</span>
+                    <span>Müşteriler</span>
                 </a>
-                <a href="/raporlar" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition">
+                <a href="/raporlar"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/raporlar') ? $active_class : $inactive_class ?>">
                     <i class="fas fa-chart-pie w-5"></i>
                     <span>Raporlar</span>
                 </a>
 
                 <div class="border-t border-white/10 my-4"></div>
 
-                <a href="/ayarlar" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition">
+                <a href="/ayarlar"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/ayarlar') ? $active_class : $inactive_class ?>">
                     <i class="fas fa-cog w-5"></i>
                     <span>Ayarlar</span>
                 </a>
@@ -226,7 +251,7 @@
     <div id="overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onclick="toggleMenu()"></div>
 
     <!-- Main Content -->
-    <main class="lg:ml-72 min-h-screen pt-16 lg:pt-0">
+    <main class="lg:ml-72 min-h-screen pt-16">
         <div class="p-4 lg:p-8">
             <?= $content ?? '' ?>
         </div>
@@ -235,25 +260,29 @@
     <!-- Bottom Navigation (Mobile) -->
     <nav class="lg:hidden fixed bottom-0 left-0 right-0 glass safe-bottom z-40">
         <div class="flex justify-around py-3">
-            <a href="/" class="flex flex-col items-center text-primary-400">
+            <a href="/"
+                class="flex flex-col items-center <?= $is_active('/') && $current_uri == '/' ? 'text-primary-400 scale-110' : 'text-gray-400 hover:text-primary-400' ?> transition">
                 <i class="fas fa-home text-xl"></i>
                 <span class="text-xs mt-1">Ana Sayfa</span>
             </a>
-            <a href="/fatura" class="flex flex-col items-center text-gray-400 hover:text-primary-400 transition">
+            <a href="/fatura"
+                class="flex flex-col items-center <?= $is_active('/fatura') && $current_uri != '/fatura/yeni' ? 'text-primary-400 scale-110' : 'text-gray-400 hover:text-primary-400' ?> transition">
                 <i class="fas fa-file-invoice text-xl"></i>
                 <span class="text-xs mt-1">Faturalar</span>
             </a>
             <a href="/fatura/yeni" class="flex flex-col items-center">
                 <div
-                    class="w-14 h-14 -mt-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center shadow-lg shadow-primary-500/50">
+                    class="w-14 h-14 -mt-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center shadow-lg shadow-primary-500/50 hover:scale-105 transition">
                     <i class="fas fa-plus text-2xl"></i>
                 </div>
             </a>
-            <a href="/cari" class="flex flex-col items-center text-gray-400 hover:text-primary-400 transition">
+            <a href="/cari"
+                class="flex flex-col items-center <?= $is_active('/cari') ? 'text-primary-400 scale-110' : 'text-gray-400 hover:text-primary-400' ?> transition">
                 <i class="fas fa-users text-xl"></i>
-                <span class="text-xs mt-1">Cariler</span>
+                <span class="text-xs mt-1">Müşteriler</span>
             </a>
-            <a href="/ayarlar" class="flex flex-col items-center text-gray-400 hover:text-primary-400 transition">
+            <a href="/ayarlar"
+                class="flex flex-col items-center <?= $is_active('/ayarlar') ? 'text-primary-400 scale-110' : 'text-gray-400 hover:text-primary-400' ?> transition">
                 <i class="fas fa-cog text-xl"></i>
                 <span class="text-xs mt-1">Ayarlar</span>
             </a>

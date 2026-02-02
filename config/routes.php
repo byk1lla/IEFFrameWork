@@ -44,4 +44,7 @@ Router::get('/api/cari/ara', 'ApiController@cariAra');
 Router::post('/api/vkn/sorgula', 'ApiController@vknSorgula');
 Router::get('/api/dashboard/stats', 'ApiController@dashboardStats');
 Router::get('/api/fatura/liste', 'ApiController@faturaListesi');
+Router::get('/api/fatura/detay/{uuid}', 'ApiController@faturaDetay');
+Router::post('/api/mukellef/ara', 'ApiController@mukellefAra');
+Router::get('/api/fatura/pdf/{uuid}', 'ApiController@downloadPdf');
 

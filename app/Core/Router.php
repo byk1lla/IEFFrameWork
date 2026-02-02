@@ -13,6 +13,7 @@ class Router
     protected static array $groupStack = [];
     protected static array $patterns = [
         '{id}' => '([a-zA-Z0-9\-]+)',
+        '{uuid}' => '([a-zA-Z0-9\-]+)',
         '{orderId}' => '([a-zA-Z0-9\-]+)',
         '{routeId}' => '([a-zA-Z0-9\-]+)',
         '{stopId}' => '([a-zA-Z0-9\-]+)',
@@ -102,21 +103,23 @@ class Router
                 $method = strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
             }
         }
-        
+
         // Debug log
         error_log("Router dispatch: method=$method, uri=$uri");
 
         foreach (self::$routes as $key => $route) {
-            if ($key === 'fallback') continue;
+            if ($key === 'fallback')
+                continue;
 
-            if ($route['method'] !== $method) continue;
+            if ($route['method'] !== $method)
+                continue;
 
             $pattern = self::convertToPattern($route['uri']);
-            
+
             if (preg_match($pattern, $uri, $matches)) {
                 error_log("Route matched: " . $route['uri'] . " -> " . (is_string($route['action']) ? $route['action'] : 'closure'));
                 array_shift($matches);
-                
+
                 // Middleware çalıştır
                 foreach ($route['middleware'] as $middleware) {
                     if (!self::runMiddleware($middleware)) {
@@ -142,7 +145,7 @@ class Router
     protected static function convertToPattern(string $uri): string
     {
         $pattern = preg_quote($uri, '#');
-        
+
         foreach (self::$patterns as $placeholder => $regex) {
             $pattern = str_replace(preg_quote($placeholder, '#'), $regex, $pattern);
         }
@@ -157,7 +160,7 @@ class Router
         $params = isset($parts[1]) ? explode(',', $parts[1]) : [];
 
         $class = 'App\\Middleware\\' . ucfirst($name) . 'Middleware';
-        
+
         if (class_exists($class)) {
             $instance = new $class();
             return $instance->handle(Request::getInstance(), $params);
@@ -176,18 +179,18 @@ class Router
         if (is_string($action)) {
             [$controller, $method] = explode('@', $action);
             $class = 'App\\Controllers\\' . $controller;
-            
+
             if (class_exists($class)) {
                 $instance = new $class();
-                
+
                 // Reflection ile method parametrelerini kontrol et
                 $reflection = new \ReflectionMethod($instance, $method);
                 $methodParams = [];
                 $paramIndex = 0;
-                
+
                 foreach ($reflection->getParameters() as $param) {
                     $type = $param->getType();
-                    
+
                     // Request tipinde parametre varsa enjekte et
                     if ($type && !$type->isBuiltin()) {
                         $typeName = $type->getName();
@@ -196,7 +199,7 @@ class Router
                             continue;
                         }
                     }
-                    
+
                     // Route parametrelerinden al
                     if (isset($params[$paramIndex])) {
                         $methodParams[] = $params[$paramIndex];
@@ -205,7 +208,7 @@ class Router
                         $methodParams[] = $param->getDefaultValue();
                     }
                 }
-                
+
                 call_user_func_array([$instance, $method], $methodParams);
             }
         }
