@@ -68,23 +68,24 @@ class MukellefController extends Controller
 
         try {
             if ($isVkn) {
-                $users = EdmHelper::queryTaxpayer($input);
-                if (!empty($users)) {
-                    $userList = is_array($users) ? (isset($users[0]) ? $users : [$users]) : [$users];
-                    foreach ($userList as $u) {
-                        $vkn = is_object($u) ? ($u->IDENTIFIER ?? $input) : ($u['IDENTIFIER'] ?? $input);
-                        // Kendi eklediği carilerle mükerrer olmasın
-                        $exists = array_filter($results, fn($r) => $r['vkn'] === $vkn);
-                        if (empty($exists)) {
-                            $results[] = [
-                                'vkn' => $vkn,
-                                'unvan' => is_object($u) ? ($u->TITLE ?? '') : ($u['TITLE'] ?? ''),
-                                'alias' => is_object($u) ? ($u->ALIAS ?? '') : ($u['ALIAS'] ?? ''),
-                                'type' => is_object($u) ? ($u->TYPE ?? '') : ($u['TYPE'] ?? ''),
-                                'system_create_time' => is_object($u) ? ($u->SYSTEM_CREATE_TIME ?? null) : ($u['SYSTEM_CREATE_TIME'] ?? null),
-                                'is_local' => false
-                            ];
-                        }
+                // Akıllı zenginleştirme ile tüm detayları çek (Adres, VD vb.)
+                $u = EdmHelper::smartEnrich($input);
+                if (!empty($u)) {
+                    $vkn = is_object($u) ? ($u->vkn ?? $input) : ($u['vkn'] ?? $input);
+                    
+                    // Duplicate check (Local data takes priority for details)
+                    $exists = array_filter($results, fn($r) => $r['vkn'] === $vkn);
+                    if (empty($exists)) {
+                        $results[] = [
+                            'vkn' => $vkn,
+                            'unvan' => is_object($u) ? ($u->unvan ?? '') : ($u['unvan'] ?? ''),
+                            'adres' => is_object($u) ? ($u->adres ?? '') : ($u['adres'] ?? ''),
+                            'vergi_dairesi' => is_object($u) ? ($u->vergi_dairesi ?? '') : ($u['vergi_dairesi'] ?? ''),
+                            'sehir' => is_object($u) ? ($u->sehir ?? '') : ($u['sehir'] ?? ''),
+                            'alias' => is_object($u) ? ($u->alias ?? '') : ($u['alias'] ?? ''),
+                            'type' => is_object($u) ? ($u->tip ?? '') : ($u['tip'] ?? ''),
+                            'is_local' => false
+                        ];
                     }
                 }
             } else {
@@ -93,6 +94,7 @@ class MukellefController extends Controller
                 if (!empty($users)) {
                     foreach ($users as $user) {
                         $vkn = is_object($user) ? ($user->IDENTIFIER ?? '') : ($user['IDENTIFIER'] ?? '');
+                        // Duplicate check
                         $exists = array_filter($results, fn($r) => $r['vkn'] === $vkn);
                         if (empty($exists)) {
                             $results[] = [

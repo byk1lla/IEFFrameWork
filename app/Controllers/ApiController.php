@@ -194,6 +194,58 @@ class ApiController extends Controller
     }
 
     /**
+     * Cari bilgilerini EDM ile eşitle (Enrichment)
+     */
+    public function cariSync($vkn)
+    {
+        try {
+            // Akıllı sorgulama (GİB + Geçmiş Faturalar)
+            $details = EdmHelper::smartEnrich($vkn);
+            if (!$details) {
+                return $this->json(['success' => false, 'error' => 'Mükellef bulunamadı']);
+            }
+
+            // Yerel dosyaya kaydet
+            $addressBookPath = dirname(__DIR__, 2) . '/edm-sdk/address_book.json';
+            if (file_exists($addressBookPath)) {
+                $data = json_decode(file_get_contents($addressBookPath), true);
+                if (isset($data['cariler'][$vkn])) {
+                    $cari = $data['cariler'][$vkn];
+
+                    // Güncellenecek alanlar
+                    $fields = [
+                        'vergi_dairesi' => 'vergi_dairesi',
+                        'sehir' => 'sehir',
+                        'tip' => 'tip',
+                        'alias' => 'alias',
+                        'kayit_tarihi' => 'kayit_tarihi',
+                        'adres' => 'adres',
+                        'email' => 'eposta',
+                        'telefon' => 'telefon'
+                    ];
+
+                    foreach ($fields as $localKey => $edmKey) {
+                        if (!empty($details->$edmKey) && empty($cari[$localKey])) {
+                            $cari[$localKey] = $details->$edmKey;
+                        }
+                    }
+
+                    $data['cariler'][$vkn] = $cari;
+                    file_put_contents($addressBookPath, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                }
+            }
+
+            return $this->json([
+                'success' => true,
+                'data' => $details
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->json(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * Fatura Detayı Getir
      */
     public function faturaDetay($uuid)
@@ -249,29 +301,46 @@ class ApiController extends Controller
             }
         }
 
-        // 2. EDM SİSTEMİNDE ARA (Eğer yerel sonuç çok azsa veya devam etmek istiyorsak)
+        // 2. EDM SİSTEMİNDE ARA
         try {
-            $results = EdmHelper::searchTaxpayerByName($query);
-            EdmHelper::logout();
+            $isVkn = is_numeric($query) && (strlen($query) === 10 || strlen($query) === 11);
 
-            if ($results && is_array($results)) {
-                foreach ($results as $user) {
-                    $vkn = is_object($user) ? ($user->IDENTIFIER ?? '') : ($user['IDENTIFIER'] ?? '');
-
-                    // Zaten yerelde bulduysak tekrar ekleme
+            if ($isVkn) {
+                $u = EdmHelper::smartEnrich($query);
+                if ($u) {
+                    $vkn = is_object($u) ? ($u->vkn ?? $query) : ($u['vkn'] ?? $query);
                     $exists = array_filter($formatted, fn($f) => $f['vkn'] === $vkn);
                     if (empty($exists)) {
                         $formatted[] = [
                             'vkn' => $vkn,
-                            'unvan' => is_object($user) ? ($user->TITLE ?? '') : ($user['TITLE'] ?? ''),
-                            'type' => is_object($user) ? ($user->TYPE ?? '') : ($user['TYPE'] ?? ''),
-                            'alias' => is_object($user) ? ($user->ALIAS ?? '') : ($user['ALIAS'] ?? ''),
-                            'adres' => '',
+                            'unvan' => is_object($u) ? ($u->unvan ?? '') : ($u['unvan'] ?? ''),
+                            'type' => is_object($u) ? ($u->tip ?? '') : ($u['tip'] ?? ''),
+                            'alias' => is_object($u) ? ($u->alias ?? '') : ($u['alias'] ?? ''),
+                            'adres' => is_object($u) ? ($u->adres ?? '') : ($u['adres'] ?? ''),
+                            'vergi_dairesi' => is_object($u) ? ($u->vergi_dairesi ?? '') : ($u['vergi_dairesi'] ?? ''),
                             'is_local' => false
                         ];
                     }
                 }
+            } else {
+                $results = EdmHelper::searchTaxpayerByName($query);
+                if ($results && is_array($results)) {
+                    foreach ($results as $user) {
+                        $vkn = is_object($user) ? ($user->IDENTIFIER ?? '') : ($user['IDENTIFIER'] ?? '');
+                        $exists = array_filter($formatted, fn($f) => $f['vkn'] === $vkn);
+                        if (empty($exists)) {
+                            $formatted[] = [
+                                'vkn' => $vkn,
+                                'unvan' => is_object($user) ? ($user->TITLE ?? '') : ($user['TITLE'] ?? ''),
+                                'type' => is_object($user) ? ($user->TYPE ?? '') : ($user['TYPE'] ?? ''),
+                                'alias' => is_object($user) ? ($user->ALIAS ?? '') : ($user['ALIAS'] ?? ''),
+                                'is_local' => false
+                            ];
+                        }
+                    }
+                }
             }
+            EdmHelper::logout();
         } catch (\Exception $e) {
             // EDM hatasını sessiz geç, yerel sonuçlar yeterli olabilir
         }

@@ -34,7 +34,8 @@
                         <div class="flex-1 min-w-0">
                             <!-- View Title -->
                             <h1 id="view-unvan" class="text-2xl lg:text-3xl font-bold text-white truncate">
-                                <?= htmlspecialchars($cari['unvan'] ?? '-') ?></h1>
+                                <?= htmlspecialchars($cari['unvan'] ?? '-') ?>
+                            </h1>
                             <!-- Edit Title -->
                             <input type="text" name="unvan" id="edit-unvan"
                                 class="hidden w-full bg-white/10 border border-white/10 rounded-lg px-3 py-2 text-white text-xl lg:text-2xl font-bold focus:outline-none focus:border-purple-500"
@@ -77,23 +78,37 @@
                     <div class="space-y-8">
                         <!-- İletişim -->
                         <div class="space-y-4">
-                            <h3 class="text-xs uppercase tracking-[0.2em] text-gray-500 font-bold border-b border-white/5 pb-2">İletişim Bilgileri</h3>
-                            
+                            <h3
+                                class="text-xs uppercase tracking-[0.2em] text-gray-500 font-bold border-b border-white/5 pb-2">
+                                İletişim Bilgileri</h3>
+
                             <div class="space-y-4">
                                 <div class="flex items-start gap-4">
-                                    <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0"><i class="fas fa-phone"></i></div>
+                                    <div
+                                        class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
+                                        <i class="fas fa-phone"></i>
+                                    </div>
                                     <div class="flex-1">
                                         <label class="text-xs text-gray-500 block">Telefon</label>
-                                        <span id="view-telefon" class="text-gray-200"><?= htmlspecialchars($cari['telefon'] ?? 'Belirtilmedi') ?></span>
-                                        <input type="text" name="telefon" id="edit-telefon" class="hidden w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-white text-sm focus:outline-none focus:border-blue-500" value="<?= htmlspecialchars($cari['telefon'] ?? '') ?>">
+                                        <span id="view-telefon"
+                                            class="text-gray-200"><?= htmlspecialchars($cari['telefon'] ?? 'Belirtilmedi') ?></span>
+                                        <input type="text" name="telefon" id="edit-telefon"
+                                            class="hidden w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-white text-sm focus:outline-none focus:border-blue-500"
+                                            value="<?= htmlspecialchars($cari['telefon'] ?? '') ?>">
                                     </div>
                                 </div>
                                 <div class="flex items-start gap-4">
-                                    <div class="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400 shrink-0"><i class="fas fa-envelope"></i></div>
+                                    <div
+                                        class="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400 shrink-0">
+                                        <i class="fas fa-envelope"></i>
+                                    </div>
                                     <div class="flex-1">
                                         <label class="text-xs text-gray-500 block">E-Posta</label>
-                                        <span id="view-email" class="text-gray-200"><?= htmlspecialchars($cari['email'] ?? 'Belirtilmedi') ?></span>
-                                        <input type="email" name="email" id="edit-email" class="hidden w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-white text-sm focus:outline-none focus:border-red-500" value="<?= htmlspecialchars($cari['email'] ?? '') ?>">
+                                        <span id="view-email"
+                                            class="text-gray-200"><?= htmlspecialchars($cari['email'] ?? 'Belirtilmedi') ?></span>
+                                        <input type="email" name="email" id="edit-email"
+                                            class="hidden w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-white text-sm focus:outline-none focus:border-red-500"
+                                            value="<?= htmlspecialchars($cari['email'] ?? '') ?>">
                                     </div>
                                 </div>
                             </div>
@@ -101,35 +116,48 @@
 
                         <!-- Kurumsal Bilgiler -->
                         <div class="space-y-4">
-                            <h3 class="text-xs uppercase tracking-[0.2em] text-gray-500 font-bold border-b border-white/5 pb-2">🏢 Kurumsal Bilgiler</h3>
+                            <h3
+                                class="text-xs uppercase tracking-[0.2em] text-gray-500 font-bold border-b border-white/5 pb-2">
+                                🏢 Kurumsal Bilgiler</h3>
                             <div class="grid grid-cols-2 gap-4">
-                                <div>
+                                <div class="sync-field">
                                     <label class="text-[10px] text-gray-500 block uppercase">Vergi Dairesi</label>
-                                    <span class="text-sm text-gray-300"><?= htmlspecialchars($cari['vergi_dairesi'] ?? 'Sorgulanıyor...') ?></span>
+                                    <span id="sync-vergi_dairesi"
+                                        class="text-sm text-gray-300 font-medium"><?= htmlspecialchars($cari['vergi_dairesi'] ?? 'Sorgulanıyor...') ?></span>
                                 </div>
-                                <div>
+                                <div class="sync-field">
                                     <label class="text-[10px] text-gray-500 block uppercase">Şehir</label>
-                                    <span class="text-sm text-gray-300"><?= htmlspecialchars($cari['sehir'] ?? '-') ?></span>
+                                    <span id="sync-sehir"
+                                        class="text-sm text-gray-300 font-medium"><?= htmlspecialchars($cari['sehir'] ?? '...') ?></span>
                                 </div>
-                                <div>
+                                <div class="sync-field">
                                     <label class="text-[10px] text-gray-500 block uppercase">Mükellef Tipi</label>
-                                    <span class="text-sm text-gray-300"><?= htmlspecialchars($cari['tip'] ?? '-') ?></span>
+                                    <span id="sync-tip"
+                                        class="text-sm text-gray-300 font-medium"><?= htmlspecialchars($cari['tip'] ?? '...') ?></span>
                                 </div>
-                                <div>
+                                <div class="sync-field">
                                     <label class="text-[10px] text-gray-500 block uppercase">Durum</label>
-                                    <span class="text-xs px-2 py-0.5 rounded bg-green-500/20 text-green-400 inline-block mt-0.5">Aktif</span>
+                                    <span id="sync-durum"
+                                        class="text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 inline-block mt-0.5 font-bold animate-pulse">Sorgulanıyor</span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Adres -->
                         <div class="space-y-4">
-                            <h3 class="text-xs uppercase tracking-[0.2em] text-gray-500 font-bold border-b border-white/5 pb-2">Adres</h3>
+                            <h3
+                                class="text-xs uppercase tracking-[0.2em] text-gray-500 font-bold border-b border-white/5 pb-2">
+                                Adres</h3>
                             <div class="flex items-start gap-4">
-                                <div class="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 shrink-0"><i class="fas fa-map-marker-alt"></i></div>
-                                <div class="flex-1">
-                                    <span id="view-adres" class="text-sm text-gray-200 leading-relaxed"><?= nl2br(htmlspecialchars($cari['adres'] ?? 'Belirtilmedi')) ?></span>
-                                    <textarea name="adres" id="edit-adres" rows="3" class="hidden w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-white text-sm focus:outline-none focus:border-green-500"><?= htmlspecialchars($cari['adres'] ?? '') ?></textarea>
+                                <div
+                                    class="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 shrink-0">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </div>
+                                <div class="flex-1 sync-field">
+                                    <span id="view-adres"
+                                        class="text-sm text-gray-200 leading-relaxed"><?= nl2br(htmlspecialchars($cari['adres'] ?? 'Sorgulanıyor...')) ?></span>
+                                    <textarea name="adres" id="edit-adres" rows="3"
+                                        class="hidden w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-white text-sm focus:outline-none focus:border-green-500"><?= htmlspecialchars($cari['adres'] ?? '') ?></textarea>
                                 </div>
                             </div>
                         </div>
@@ -139,21 +167,28 @@
                     <div class="space-y-8">
                         <!-- Etiket Section -->
                         <div class="space-y-4">
-                            <h3 class="text-xs uppercase tracking-[0.2em] text-gray-500 font-bold border-b border-white/5 pb-2">🏷️ Etiketler (Alias)</h3>
+                            <h3
+                                class="text-xs uppercase tracking-[0.2em] text-gray-500 font-bold border-b border-white/5 pb-2">
+                                🏷️ Etiketler (Alias)</h3>
                             <?php if (!empty($cari['alias'])): ?>
                                 <div class="p-4 bg-white/5 rounded-xl border border-white/10 space-y-4">
                                     <div class="flex justify-between items-center group">
                                         <div class="flex-1 overflow-hidden">
-                                            <span class="text-[10px] text-gray-500 block uppercase mb-1">E-Fatura Etiketi (PK)</span>
-                                            <span class="text-xs font-mono text-purple-400 truncate block"><?= $cari['alias'] ?></span>
+                                            <span class="text-[10px] text-gray-500 block uppercase mb-1">E-Fatura Etiketi
+                                                (PK)</span>
+                                            <span
+                                                class="text-xs font-mono text-purple-400 truncate block"><?= $cari['alias'] ?></span>
                                         </div>
-                                        <button type="button" onclick="copyToClipboard('<?= $cari['alias'] ?>')" class="p-2 hover:bg-white/10 rounded-lg transition text-gray-400 hover:text-white" title="Kopyala">
+                                        <button type="button" onclick="copyToClipboard('<?= $cari['alias'] ?>')"
+                                            class="p-2 hover:bg-white/10 rounded-lg transition text-gray-400 hover:text-white"
+                                            title="Kopyala">
                                             <i class="fas fa-copy"></i>
                                         </button>
                                     </div>
                                     <div class="flex justify-between items-center text-[10px]">
                                         <span class="text-gray-500">Kayıt Tarihi:</span>
-                                        <span class="text-gray-400"><?= !empty($cari['kayit_tarihi']) ? date('d.m.Y', strtotime($cari['kayit_tarihi'])) : '-' ?></span>
+                                        <span
+                                            class="text-gray-400"><?= !empty($cari['kayit_tarihi']) ? date('d.m.Y', strtotime($cari['kayit_tarihi'])) : '-' ?></span>
                                     </div>
                                 </div>
                             <?php else: ?>
@@ -163,32 +198,44 @@
 
                         <!-- Sistem Bilgileri -->
                         <div class="space-y-4">
-                            <h3 class="text-xs uppercase tracking-[0.2em] text-gray-500 font-bold border-b border-white/5 pb-2">Sistem Bilgileri</h3>
+                            <h3
+                                class="text-xs uppercase tracking-[0.2em] text-gray-500 font-bold border-b border-white/5 pb-2">
+                                Sistem Bilgileri</h3>
                             <div class="p-4 bg-white/5 rounded-xl border border-white/10 space-y-4">
                                 <div class="flex justify-between items-center text-sm">
                                     <span class="text-gray-500">Eklenme Tarihi</span>
-                                    <span class="text-gray-300"><?= !empty($cari['created_at']) ? date('d.m.Y H:i', strtotime($cari['created_at'])) : '-' ?></span>
+                                    <span
+                                        class="text-gray-300"><?= !empty($cari['created_at']) ? date('d.m.Y H:i', strtotime($cari['created_at'])) : '-' ?></span>
                                 </div>
                                 <?php if (!empty($cari['updated_at'])): ?>
-                                <div class="flex justify-between items-center text-sm border-t border-white/5 pt-4">
-                                    <span class="text-gray-500">Son Güncelleme</span>
-                                    <span class="text-gray-300"><?= date('d.m.Y H:i', strtotime($cari['updated_at'])) ?></span>
-                                </div>
+                                    <div class="flex justify-between items-center text-sm border-t border-white/5 pt-4">
+                                        <span class="text-gray-500">Son Güncelleme</span>
+                                        <span
+                                            class="text-gray-300"><?= date('d.m.Y H:i', strtotime($cari['updated_at'])) ?></span>
+                                    </div>
                                 <?php endif; ?>
                             </div>
                         </div>
 
                         <!-- Edit Buttons -->
                         <div id="edit-actions" class="hidden space-y-3 pt-4">
-                            <button type="submit" class="w-full py-3 bg-gradient-to-r from-green-600 to-green-700 hover:shadow-lg hover:shadow-green-500/30 rounded-xl font-bold text-white transition flex items-center justify-center gap-2">
+                            <button type="submit"
+                                class="w-full py-3 bg-gradient-to-r from-green-600 to-green-700 hover:shadow-lg hover:shadow-green-500/30 rounded-xl font-bold text-white transition flex items-center justify-center gap-2">
                                 <i class="fas fa-save"></i> Değişiklikleri Kaydet
                             </button>
-                            <button type="button" id="cancelEdit" class="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl font-semibold text-gray-400 transition">İptal Et</button>
+                            <button type="button" id="cancelEdit"
+                                class="w-full py-3 bg-white/5 hover:bg-white/10 rounded-xl font-semibold text-gray-400 transition">İptal
+                                Et</button>
                         </div>
 
-                        <div id="view-actions" class="p-6 rounded-2xl bg-gradient-to-br from-blue-600/10 to-purple-600/10 border border-blue-500/10 text-center">
-                            <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 mb-4 mx-auto"><i class="fas fa-info-circle"></i></div>
-                            <p class="text-sm text-gray-400 leading-relaxed">Bilgileri kontrol edebilir veya hızlıca fatura oluşturabilirsiniz.</p>
+                        <div id="view-actions"
+                            class="p-6 rounded-2xl bg-gradient-to-br from-blue-600/10 to-purple-600/10 border border-blue-500/10 text-center">
+                            <div
+                                class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 mb-4 mx-auto">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <p class="text-sm text-gray-400 leading-relaxed">Bilgileri kontrol edebilir veya hızlıca fatura
+                                oluşturabilirsiniz.</p>
                         </div>
                     </div>
                 </div>
@@ -249,6 +296,68 @@
             });
         });
     }
+
+    // Sync Cari Data from EDM
+    function syncCariData() {
+        const vkn = '<?= $cari["vkn"] ?? "" ?>';
+        if (!vkn) return;
+
+        // Sexy Loading: Start
+        const fields = ['vergi_dairesi', 'sehir', 'tip', 'adres'];
+        const status = document.getElementById('sync-durum');
+
+        // Pulse Effect
+        document.querySelectorAll('.sync-field span').forEach(el => {
+            el.classList.add('animate-pulse', 'text-blue-400');
+        });
+
+        fetch(`/api/cari/sync/${vkn}`)
+            .then(res => res.json())
+            .then(data => {
+                // Sexy Loading: Stop pulse
+                document.querySelectorAll('.sync-field span').forEach(el => {
+                    el.classList.remove('animate-pulse', 'text-blue-400');
+                });
+
+                if (data.success && data.data) {
+                    const m = data.data;
+
+                    // Update content with transition
+                    const updateWithFlash = (id, value) => {
+                        const el = document.getElementById(id);
+                        if (!el) return;
+                        el.textContent = value || 'Belirtilmedi';
+                        el.classList.add('text-green-400', 'font-bold');
+                        setTimeout(() => el.classList.remove('text-green-400', 'font-bold'), 2000);
+                    };
+
+                    updateWithFlash('sync-vergi_dairesi', m.vergi_dairesi);
+                    updateWithFlash('sync-sehir', m.sehir);
+                    updateWithFlash('sync-tip', m.tip);
+                    updateWithFlash('view-adres', m.adres);
+                    updateWithFlash('view-email', m.eposta);
+                    updateWithFlash('view-telefon', m.telefon);
+
+                    if (status) {
+                        status.textContent = 'AKTİF / DOĞRULANDI';
+                        status.classList.remove('bg-blue-500/20', 'text-blue-400', 'animate-pulse');
+                        status.classList.add('bg-green-500/20', 'text-green-400', 'ring-1', 'ring-green-500/50');
+                    }
+                } else {
+                    if (status) {
+                        status.textContent = 'SORGULAMA HATASI';
+                        status.classList.remove('animate-pulse');
+                        status.classList.add('bg-red-500/20', 'text-red-400');
+                    }
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                if (status) status.textContent = 'BAĞLANTI HATASI';
+            });
+    }
+
+    window.addEventListener('load', syncCariData);
 </script>
 </div>
 

@@ -507,41 +507,51 @@
         "8600395373": {
             "vkn": "8600395373",
             "unvan": "TUĞBA KOZMETİK VE TEKSTİL ÜRÜNLERİ PAZARLAMA SANAYİ TİC. LTD. ŞTİ",
-            "adres": null,
-            "telefon": null,
-            "email": null,
+            "adres": "ORUÇREİS MAH. GİYİMKENT 15. SK. GIYIM KOOP IŞ MERKEZ CAMII No:1 \/23",
+            "telefon": "",
+            "email": "",
+            "alias": "urn:mail:tugbapk@edmbilisim.com",
             "grup": "Genel",
-            "created_at": "2026-02-02 06:03:24",
-            "alias": "urn:mail:tugbapk@edmbilisim.com"
+            "created_at": "2026-02-02 06:56:22",
+            "vergi_dairesi": "ATIŞALANI VERGİ DAİRESİ MÜD.",
+            "sehir": "ESENLER \/ İSTANBUL",
+            "tip": "OZEL"
         },
         "3240427733": {
             "vkn": "3240427733",
-            "unvan": "ECOPACK MAKİNE VE GIDA SAN.TİC.LTD.ŞTİ.",
+            "unvan": "ECOPACK MAKİNE VE GIDA SAN.TİC.LTD.ŞTİ",
             "adres": "",
             "telefon": "",
             "email": "",
             "grup": "Müşteri",
-            "created_at": "2026-02-02 06:14:44"
+            "created_at": "2026-02-02 06:14:44",
+            "alias": "urn:mail:defaultpk@ecopackambalaj.com",
+            "tip": "OZEL"
         },
         "7810382811": {
             "vkn": "7810382811",
             "unvan": "SPC KOZMETİK YAZILIM SANAYİ VE TİCARET LİMİTED ŞİRKETİ",
-            "adres": "",
+            "adres": "ÇİĞDEM MAH. BAHRİYE SK. No:1 \/A",
             "telefon": "",
             "email": "",
-            "alias": null,
+            "alias": "urn:mail:spcpk@edmbilisim.com",
             "grup": "Müşteri",
-            "created_at": "2026-02-02 06:14:51"
+            "created_at": "2026-02-02 06:14:51",
+            "vergi_dairesi": "BEYKOZ VERGİ DAİRESİ MÜD.",
+            "sehir": "BEYKOZ \/ İSTANBUL",
+            "tip": "OZEL"
         },
         "2910107981": {
             "vkn": "2910107981",
-            "unvan": "DENİZ AMBALAJ VE MATBAACILIK SANAYİ TİCARET LİMİTED ŞİRKETİ",
+            "unvan": "DENİZ AMBALAJ VE MATBAACILIK SANAYİ TİÇ. LTD.ŞTİ",
             "adres": "",
             "telefon": "",
             "email": "",
-            "alias": "",
+            "alias": "urn:mail:161864defaultpk@isnet.com",
             "grup": "Müşteri",
-            "created_at": "2026-02-02 06:15:18"
+            "created_at": "2026-02-02 06:15:18",
+            "tip": "OZEL",
+            "vergi_dairesi": "BAYRAMPAŞA VERGİ DAİRESİ MÜD."
         }
     }
 }

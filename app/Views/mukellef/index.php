@@ -67,6 +67,7 @@
                                 class="bg-white/5 text-[10px] uppercase tracking-wider text-gray-400 font-bold border-b border-white/5">
                                 <th class="px-6 py-4">Ünvan / Firma Adı</th>
                                 <th class="px-6 py-4">VKN / TCKN</th>
+                                <th class="px-6 py-4">Adres / Vergi Dairesi</th>
                                 <th class="px-6 py-4">Tip</th>
                                 <th class="px-6 py-4">E-Fatura Etiketi (Alias)</th>
                                 <th class="px-6 py-4 text-right">İşlem</th>
@@ -92,6 +93,22 @@
                                         <?php endif; ?>
                                     </td>
                                     <td class="px-6 py-4 text-xs font-mono text-gray-400"><?= $res['vkn'] ?></td>
+                                    <td class="px-6 py-4">
+                                        <?php if (!empty($res['adres'])): ?>
+                                            <div class="text-[11px] text-gray-200 leading-tight mb-1">
+                                                <i
+                                                    class="fas fa-map-marker-alt text-blue-400 mr-1"></i><?= htmlspecialchars($res['adres']) ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if (!empty($res['vergi_dairesi'])): ?>
+                                            <div class="text-[10px] text-gray-500 italic">
+                                                <i class="fas fa-landmark mr-1"></i><?= htmlspecialchars($res['vergi_dairesi']) ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <?php if (empty($res['adres']) && empty($res['vergi_dairesi'])): ?>
+                                            <span class="text-[10px] text-gray-600 italic">Bilgi bulunamadı</span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td class="px-6 py-4">
                                         <span
                                             class="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 font-bold uppercase tracking-tight">
@@ -129,11 +146,11 @@
                                                     </div>
                                                 </div>
                                             <?php else: ?>
-                                                <a href="/fatura/yeni?vkn=<?= $res['vkn'] ?>&unvan=<?= urlencode($res['unvan']) ?>&alias=<?= urlencode($res['alias']) ?>"
+                                                <a href="/fatura/yeni?vkn=<?= $res['vkn'] ?>&unvan=<?= urlencode($res['unvan']) ?>&alias=<?= urlencode($res['alias']) ?>&adres=<?= urlencode($res['adres'] ?? '') ?>&vd=<?= urlencode($res['vergi_dairesi'] ?? '') ?>"
                                                     class="px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5">
                                                     <i class="fas fa-file-invoice"></i> FATURA
                                                 </a>
-                                                <a href="/cari/yeni?vkn=<?= $res['vkn'] ?>&unvan=<?= urlencode($res['unvan']) ?>&alias=<?= urlencode($res['alias']) ?>"
+                                                <a href="/cari/yeni?vkn=<?= $res['vkn'] ?>&unvan=<?= urlencode($res['unvan']) ?>&alias=<?= urlencode($res['alias']) ?>&adres=<?= urlencode($res['adres'] ?? '') ?>&vd=<?= urlencode($res['vergi_dairesi'] ?? '') ?>"
                                                     class="px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500 text-purple-400 hover:text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5">
                                                     <i class="fas fa-plus"></i> EKLE
                                                 </a>
@@ -248,7 +265,9 @@
                             ${escapeHtml(res.unvan)}
                             ${res.is_local ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 font-bold border border-amber-500/20">REHBER</span>' : ''}
                         </div>
-                        <div class="text-xs text-gray-500 font-mono">${res.vkn} | ${res.type}</div>
+                        <div class="text-[10px] text-gray-500 font-mono">${res.vkn} | ${res.type}</div>
+                        ${res.adres ? `<div class="text-[10px] text-gray-400 mt-1"><i class="fas fa-map-marker-alt text-blue-500 mr-1"></i>${escapeHtml(res.adres)}</div>` : ''}
+                        ${res.vergi_dairesi ? `<div class="text-[9px] text-gray-600 italic"><i class="fas fa-landmark mr-1"></i>${escapeHtml(res.vergi_dairesi)}</div>` : ''}
                     </div>
                 </div>
                 ${actionButtons}

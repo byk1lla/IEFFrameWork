@@ -14,76 +14,127 @@
     <form id="invoiceForm" action="/fatura/kaydet" method="POST" class="space-y-6" onsubmit="return validateForm()">
         <input type="hidden" name="_csrf_token" value="<?= $csrf_token ?? '' ?>">
 
-        <!-- Alıcı Bilgileri -->
+        <!-- Müşteri Seçimi -->
         <div class="glass rounded-2xl p-6 relative z-30">
-            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                <i class="fas fa-user text-blue-400"></i>
-                Alıcı Bilgileri
-            </h2>
+            <div id="selection_header" class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
+                    <i class="fas fa-users text-blue-400"></i>
+                    Müşteri Seçimi
+                </h2>
+                <button type="button" id="change_customer_btn" onclick="resetSelection()"
+                    class="hidden text-xs bg-white/5 hover:bg-white/10 text-gray-400 px-3 py-1.5 rounded-lg transition">
+                    <i class="fas fa-sync-alt mr-1"></i> Değiştir
+                </button>
+            </div>
 
-            <div class="grid lg:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-gray-400 text-sm mb-2">VKN / TCKN</label>
-                    <div class="flex gap-2">
-                        <input type="text" name="vkn" id="vkn" required maxlength="11"
-                            class="flex-1 bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-blue-500"
-                            placeholder="VKN giriniz" onblur="if(this.value.length >= 10) sorgulaVKN()">
-                        <button type="button" id="vkn_sorgu_btn" onclick="sorgulaVKN()"
-                            class="px-4 bg-blue-500 rounded-xl hover:bg-blue-600 transition flex items-center justify-center min-w-[50px] relative overflow-hidden group/vknbtn"
-                            title="VKN ile Sorgula">
-                            <i class="fas fa-search transition-transform group-hover/vknbtn:scale-125"></i>
-                            <div id="vkn_loader"
-                                class="hidden absolute inset-0 bg-blue-600 flex items-center justify-center">
-                                <i class="fas fa-circle-notch fa-spin"></i>
-                            </div>
-                        </button>
-                    </div>
-                </div>
-
+            <!-- Arama Bölümü -->
+            <div id="search_zone" class="space-y-4">
                 <div class="relative">
-                    <label class="block text-gray-400 text-sm mb-2">Ünvan / Ad Soyad</label>
-                    <div class="relative">
-                        <input type="text" name="unvan" id="unvan" required autocomplete="off"
-                            class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-blue-500 focus:bg-gray-800"
-                            placeholder="Firma ünvanı yazarak arayın..." oninput="handleTitleInput(this.value)">
-
-                        <!-- Small Ring Spinner CSS for this page -->
-                        <style>
-                            .small-ring-spinner {
-                                width: 20px;
-                                height: 20px;
-                                border: 2px solid rgba(255, 255, 255, 0.1);
-                                border-top-color: #3b82f6;
-                                border-radius: 50%;
-                                animation: spin 0.8s linear infinite;
-                            }
-
-                            @keyframes spin {
-                                to {
-                                    transform: rotate(360deg);
-                                }
-                            }
-                        </style>
-
-                        <div id="title_suggestions"
-                            class="hidden absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-white/10 rounded-xl shadow-2xl max-h-60 overflow-y-auto z-50">
-                        </div>
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-500"></i>
                     </div>
-                    <div id="title_loading" class="hidden absolute right-4 top-[38px]">
+                    <input type="text" id="customer_search_input"
+                        class="w-full bg-white/5 border border-white/10 rounded-2xl py-5 pl-12 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition text-lg shadow-inner"
+                        placeholder="Müşteri adı veya VKN yazarak arayın..." oninput="handleCustomerSearch(this.value)">
+
+                    <div id="search_loading" class="hidden absolute right-6 top-[22px]">
                         <div class="small-ring-spinner"></div>
                     </div>
                 </div>
+
+                <div id="customer_suggestions"
+                    class="hidden bg-gray-900/50 border border-white/10 rounded-2xl shadow-2xl overflow-hidden divide-y divide-white/5 z-50">
+                </div>
+
+                <div class="flex items-center gap-4 pt-2">
+                    <div class="h-px flex-1 bg-white/5"></div>
+                    <span class="text-[10px] text-gray-600 font-bold uppercase tracking-widest">veya</span>
+                    <div class="h-px flex-1 bg-white/5"></div>
+                </div>
+
+                <button type="button" onclick="showRecipientForm(true)"
+                    class="w-full py-4 bg-white/5 hover:bg-white/10 border border-dashed border-white/20 rounded-2xl text-gray-400 hover:text-white transition flex items-center justify-center gap-3 group">
+                    <div
+                        class="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <span class="font-semibold text-sm">Yeni Müşteri Bilgilerini El ile Gir</span>
+                </button>
             </div>
 
-            <!-- Adres Alanı - Fixed Input issues -->
-            <div class="lg:col-span-2 relative z-0">
-                <label class="block text-gray-400 text-sm mb-2">Adres</label>
-                <textarea name="adres" id="adres" rows="3"
-                    class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-blue-500 placeholder-gray-500"
-                    placeholder="Tam adres giriniz"></textarea>
+            <!-- Seçili Müşteri Özeti (Form açılınca üstte kalacak) -->
+            <div id="selected_customer_summary" class="hidden animate-fade-in">
+                <div class="flex items-center gap-4 p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                    <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white text-xl">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div id="summ_unvan" class="font-bold text-white truncate">Müşteri Ünvanı</div>
+                        <div id="summ_vkn" class="text-xs text-blue-400 font-mono">3240232123</div>
+                    </div>
+                    <div id="summ_badge"></div>
+                </div>
             </div>
 
-            <div id="alici_bilgi" class="mt-4 empty:hidden"></div>
+            <!-- Gizli Alıcı Formu -->
+            <div id="recipient_form" class="hidden mt-8 pt-8 border-t border-white/5 space-y-4 animate-fade-in">
+                <div class="grid lg:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">VKN / TCKN</label>
+                        <div class="flex gap-2">
+                            <input type="text" name="vkn" id="vkn" required maxlength="11"
+                                class="flex-1 bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-blue-500"
+                                placeholder="VKN giriniz">
+                            <button type="button" id="vkn_sorgu_btn" onclick="sorgulaVKN()"
+                                class="px-4 bg-blue-500 rounded-xl hover:bg-blue-600 transition flex items-center justify-center min-w-[50px] relative overflow-hidden group/vknbtn">
+                                <i class="fas fa-search transition-transform group-hover/vknbtn:scale-125"></i>
+                                <div id="vkn_loader"
+                                    class="hidden absolute inset-0 bg-blue-600 flex items-center justify-center">
+                                    <i class="fas fa-circle-notch fa-spin"></i>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                    <style>
+                        @keyframes spin {
+                            to {
+                                transform: rotate(360deg);
+                            }
+                        }
+
+                        .animate-fade-in {
+                            animation: fadeIn 0.3s ease-out forwards;
+                        }
+
+                        @keyframes fadeIn {
+                            from {
+                                opacity: 0;
+                                transform: translateY(10px);
+                            }
+
+                            to {
+                                opacity: 1;
+                                transform: translateY(0);
+                            }
+                        }
+                    </style>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-2">Ünvan / Ad Soyad</label>
+                        <input type="text" name="unvan" id="unvan" required
+                            class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-blue-500"
+                            placeholder="Firma ünvanı">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-400 text-sm mb-2">Adres</label>
+                    <textarea name="adres" id="adres" rows="3"
+                        class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-blue-500 placeholder-gray-500"
+                        placeholder="Tam adres giriniz"></textarea>
+                </div>
+
+                <div id="alici_bilgi"></div>
+            </div>
         </div>
 
         <!-- Fatura Ayarları -->
@@ -332,12 +383,17 @@
         const urlParams = new URLSearchParams(window.location.search);
         const preVkn = urlParams.get('vkn');
         const preUnvan = urlParams.get('unvan');
+        const preAdres = urlParams.get('adres');
+        const preAlias = urlParams.get('alias');
 
-        if (preVkn) {
+        if (preVkn && preUnvan) {
+            // Use the new selectCustomer logic for clean transition
+            selectCustomer(preVkn, preUnvan, preAlias, 'OZEL', preAdres, false);
+        } else if (preVkn) {
+            // Fallback for VKN-only prefill
             document.getElementById('vkn').value = preVkn;
             if (preUnvan) document.getElementById('unvan').value = preUnvan;
-
-            // Auto-trigger validation/badge
+            showRecipientForm(true);
             sorgulaVKN();
         }
     });
@@ -533,7 +589,139 @@
         }
     }
 
-    // Reuse existing VKN/Title search logic...
+    /* Fixed Selection Logic */
+    let searchTimeout;
+    const searchZone = document.getElementById('search_zone');
+    const recipientForm = document.getElementById('recipient_form');
+    const selectedSummary = document.getElementById('selected_customer_summary');
+    const changeBtn = document.getElementById('change_customer_btn');
+    const custSuggestions = document.getElementById('customer_suggestions');
+    const custSearchInput = document.getElementById('customer_search_input');
+
+    function handleCustomerSearch(query) {
+        clearTimeout(searchTimeout);
+        if (query.length < 3) { custSuggestions.classList.add('hidden'); return; }
+
+        document.getElementById('search_loading').classList.remove('hidden');
+        searchTimeout = setTimeout(() => {
+            const formData = new FormData();
+            formData.append('q', query);
+            fetch('/api/mukellef/ara', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('search_loading').classList.add('hidden');
+                    if (data.success && data.data.length > 0) {
+                        renderCustomerSuggestions(data.data);
+                    } else {
+                        custSuggestions.classList.add('hidden');
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('search_loading').classList.add('hidden');
+                    custSuggestions.classList.add('hidden');
+                });
+        }, 400);
+    }
+
+    function renderCustomerSuggestions(data) {
+        const local = data.filter(u => u.is_local);
+        const global = data.filter(u => !u.is_local);
+
+        let html = '';
+
+        if (local.length > 0) {
+            html += `<div class="p-2 bg-blue-500/10 text-[10px] text-blue-400 font-bold uppercase tracking-widest border-b border-white/5">Mevcut Müşteriler</div>`;
+            local.forEach(user => {
+                html += renderSingleItem(user);
+            });
+        }
+
+        if (global.length > 0) {
+            html += `<div class="p-2 bg-purple-500/10 text-[10px] text-purple-400 font-bold uppercase tracking-widest border-b border-white/5">Sistem Genelinde Ara</div>`;
+            global.forEach(user => {
+                html += renderSingleItem(user);
+            });
+        }
+
+        custSuggestions.innerHTML = html;
+        custSuggestions.classList.remove('hidden');
+    }
+
+    function renderSingleItem(user) {
+        const safeUnvan = user.unvan ? user.unvan.replace(/'/g, "\\'").replace(/\n/g, ' ') : '';
+        const safeVkn = user.vkn || '';
+        const safeAlias = user.alias || '';
+        const safeType = user.type || 'UNKNOWN';
+        const safeAdres = user.adres ? user.adres.replace(/'/g, "\\'").replace(/\n/g, ' ') : '';
+        const isLocal = user.is_local ? true : false;
+
+        return `
+            <div class="p-4 hover:bg-white/5 cursor-pointer transition flex justify-between items-center group" 
+                 onclick="selectCustomer('${safeVkn}', '${safeUnvan}', '${safeAlias}', '${safeType}', '${safeAdres}', ${isLocal})">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-gray-500 group-hover:bg-blue-500/20 group-hover:text-blue-400 transition font-bold">
+                        ${user.unvan ? user.unvan.charAt(0).toUpperCase() : '?'}
+                    </div>
+                    <div>
+                        <div class="font-bold text-white group-hover:text-blue-400 transition flex items-center gap-2">
+                            ${user.unvan}
+                            ${isLocal ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 font-bold border border-amber-500/20">REHBER</span>' : ''}
+                        </div>
+                        <div class="text-xs text-gray-500 mt-0.5 font-mono">${user.vkn} | ${safeType}</div>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-gray-700 group-hover:text-blue-500 transition"></i>
+            </div>
+        `;
+    }
+
+    function selectCustomer(vkn, unvan, alias, type, adres, isLocal) {
+        // Pre-fill hidden form
+        document.getElementById('vkn').value = vkn;
+        document.getElementById('unvan').value = unvan;
+        document.getElementById('adres').value = adres || '';
+
+        // Update Summary
+        document.getElementById('summ_unvan').textContent = unvan;
+        document.getElementById('summ_vkn').textContent = vkn;
+
+        const badge = document.getElementById('summ_badge');
+        badge.innerHTML = `<span class="text-[10px] px-2 py-1 rounded-lg font-bold ${type === 'OZEL' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}">${type}</span>`;
+
+        // Switch View
+        showRecipientForm(false);
+        updateBadge(type, alias, isLocal);
+
+        // Final UI Polish
+        custSuggestions.classList.add('hidden');
+        custSearchInput.value = '';
+    }
+
+    function showRecipientForm(isManual = false) {
+        searchZone.classList.add('hidden');
+        recipientForm.classList.remove('hidden');
+        changeBtn.classList.remove('hidden');
+
+        if (!isManual) {
+            selectedSummary.classList.remove('hidden');
+        } else {
+            selectedSummary.classList.add('hidden');
+            document.getElementById('vkn').value = '';
+            document.getElementById('unvan').value = '';
+            document.getElementById('adres').value = '';
+            document.getElementById('alici_bilgi').innerHTML = '';
+            document.getElementById('vkn').focus();
+        }
+    }
+
+    function resetSelection() {
+        searchZone.classList.remove('hidden');
+        recipientForm.classList.add('hidden');
+        selectedSummary.classList.add('hidden');
+        changeBtn.classList.add('hidden');
+        custSearchInput.focus();
+    }
+
     function sorgulaVKN() {
         const vkn = document.getElementById('vkn').value;
         const btn = document.getElementById('vkn_sorgu_btn');
@@ -541,7 +729,6 @@
 
         if (!vkn || vkn.length < 10) return;
 
-        // Sexy Loading Start
         btn.disabled = true;
         loader.classList.remove('hidden');
         btn.classList.add('animate-pulse');
@@ -551,7 +738,6 @@
         fetch('/api/vkn/sorgula', { method: 'POST', body: formData })
             .then(res => res.json())
             .then(data => {
-                // Sexy Loading End
                 btn.disabled = false;
                 loader.classList.add('hidden');
                 btn.classList.remove('animate-pulse');
@@ -559,83 +745,41 @@
                     document.getElementById('unvan').value = data.mukellef.unvan || '';
                     if (data.mukellef.adres) document.getElementById('adres').value = data.mukellef.adres;
                     updateBadge(data.mukellef.type, data.mukellef.alias, data.mukellef.is_local);
+
                     Swal.fire({
-                        icon: 'success', title: 'Mükellef Bulundu',
-                        text: `${data.mukellef.unvan} ${data.mukellef.is_local ? '(Rehberden)' : ''}`,
+                        icon: 'success', title: 'Mükellef Bilgileri Geldi',
+                        text: `${data.mukellef.unvan}`,
                         timer: 1500, showConfirmButton: false, toast: true, position: 'top-end'
                     });
-                } else { document.getElementById('alici_bilgi').innerHTML = ''; }
+                }
             })
-            .catch(err => { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-search"></i>'; } });
+            .catch(() => { btn.disabled = false; loader.classList.add('hidden'); });
     }
 
-    let searchTimeout;
-    const suggestionsBox = document.getElementById('title_suggestions');
-    function handleTitleInput(query) {
-        clearTimeout(searchTimeout);
-        if (query.length < 3) { suggestionsBox.classList.add('hidden'); return; }
-        document.getElementById('title_loading').classList.remove('hidden');
-        searchTimeout = setTimeout(() => {
-            const formData = new FormData(); formData.append('q', query);
-            fetch('/api/mukellef/ara', { method: 'POST', body: formData })
-                .then(res => res.json()).then(data => {
-                    document.getElementById('title_loading').classList.add('hidden');
-                    if (data.success && data.data.length > 0) {
-                        let html = '';
-                        data.data.forEach(user => {
-                            if (!user) return;
-                            const safeUnvan = user.unvan ? user.unvan.replace(/'/g, "\\'").replace(/\n/g, ' ') : '';
-                            const safeVkn = user.vkn || '';
-                            const safeAlias = user.alias || '';
-                            const safeType = user.type || 'UNKNOWN';
-                            const safeAdres = user.adres ? user.adres.replace(/'/g, "\\'").replace(/\n/g, ' ') : '';
-                            const isLocal = user.is_local ? true : false;
-
-                            html += `<div class="p-3 border-b border-white/5 hover:bg-white/10 cursor-pointer transition flex justify-between items-center group" onclick="selectSuggestion('${safeVkn}', '${safeUnvan}', '${safeAlias}', '${safeType}', '${safeAdres}', ${isLocal})">
-                                <div>
-                                    <div class="font-semibold text-sm group-hover:text-blue-400 transition flex items-center gap-2">
-                                        ${user.unvan}
-                                        ${isLocal ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 font-bold border border-amber-500/20">REHBER</span>' : ''}
-                                    </div>
-                                    <div class="text-xs text-gray-500 mt-0.5">VKN: ${user.vkn}</div>
-                                </div>
-                                <span class="text-xs px-2 py-1 rounded bg-white/5 ${safeType === 'OZEL' ? 'text-purple-400' : 'text-blue-400'}">${safeType}</span>
-                            </div>`;
-                        });
-                        suggestionsBox.innerHTML = html; suggestionsBox.classList.remove('hidden');
-                    } else { suggestionsBox.classList.add('hidden'); }
-                }).catch(() => { suggestionsBox.classList.add('hidden'); document.getElementById('title_loading').classList.add('hidden'); });
-        }, 500);
-    }
-    function selectSuggestion(vkn, unvan, alias, type, adres = '', isLocal = false) {
-        document.getElementById('vkn').value = vkn;
-        document.getElementById('unvan').value = unvan;
-        if (adres) document.getElementById('adres').value = adres;
-        suggestionsBox.classList.add('hidden');
-        updateBadge(type, alias, isLocal);
-    }
     function updateBadge(type, alias, isLocal = false) {
         const typeBadge = document.getElementById('alici_bilgi');
         if (!typeBadge) return;
-        const typeClass = type === 'OZEL' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400';
-        typeBadge.innerHTML = `<div class="flex items-start gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
-            <div class="${type === 'OZEL' ? 'bg-purple-500' : 'bg-blue-500'} w-2 h-2 rounded-full mt-2"></div>
-            <div>
-                <h4 class="text-sm font-semibold text-white flex items-center gap-2">
-                    E-Fatura Mükellefi
-                    ${isLocal ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 font-bold border border-amber-500/20">YENİ DEĞİL (REHBERDE)</span>' : ''}
-                </h4>
-                <p class="text-xs text-gray-400 mt-1">Alias: ${alias || 'Varsayılan'}</p>
-                <span class="inline-block mt-2 text-[10px] uppercase tracking-wider ${type === 'OZEL' ? 'text-purple-400' : 'text-blue-400'}">${type} SENARYO</span>
-            </div>
-        </div>`;
+        typeBadge.innerHTML = `
+            <div class="flex items-start gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 shadow-inner">
+                <div class="w-2 h-2 rounded-full ${type === 'OZEL' ? 'bg-purple-500 shadow-[0_0_10px_#a855f7]' : 'bg-blue-500 shadow-[0_0_10px_#3b82f6]'} mt-1.5"></div>
+                <div class="flex-1">
+                    <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                        E-FATURA SİSTEMİNDE KAYITLI
+                        ${isLocal ? '<span class="text-[9px] px-2 py-0.5 rounded-full bg-amber-500 text-black font-black uppercase tracking-tighter">REHBER</span>' : ''}
+                    </h4>
+                    <p class="text-[11px] text-gray-500 mt-1">Sistem tarafından otomatik doğrulandı.</p>
+                    <div class="flex gap-2 mt-3">
+                        <span class="text-[10px] bg-white/5 px-2 py-1 rounded font-mono text-gray-400">ALIAS: ${alias || 'default'}</span>
+                        <span class="text-[10px] bg-white/5 px-2 py-1 rounded font-mono text-gray-400 capitalize">TİP: ${type}</span>
+                    </div>
+                </div>
+            </div>`;
     }
-    document.addEventListener('click', function (e) {
-        if (!document.getElementById('unvan').contains(e.target) && !suggestionsBox.contains(e.target)) { suggestionsBox.classList.add('hidden'); }
-    });
+
     function validateForm() {
         const vkn = document.getElementById('vkn').value;
         if (vkn.length < 10) { Swal.fire('Hata', 'Geçerli bir VKN/TCKN giriniz.', 'error'); return false; }
         return true;
     }
+
 </script>
