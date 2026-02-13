@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'from_email' => 'noreply@iefframework.com',
+    'from_email' => 'noreply@iefsoftware.tr',
     'from_name' => 'IEF Framework',
     'driver' => 'mail', // Options: mail, smtp
 

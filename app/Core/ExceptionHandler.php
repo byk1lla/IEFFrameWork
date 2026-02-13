@@ -177,294 +177,122 @@ class ExceptionHandler
     <title>Hata - IEF Framework</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg: #020617;
+            --card-bg: rgba(15, 23, 42, 0.7);
+            --danger: #ef4444;
+            --text: #f3f4f6;
+            --muted: #9ca3af;
+            --border: rgba(255, 255, 255, 0.1);
+            --accent: #00D1FF;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0f0f23; 
-            color: #e4e4e7; 
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             line-height: 1.6;
-            min-height: 100vh;
+            background-image: radial-gradient(circle at top right, rgba(239, 68, 68, 0.05), transparent 40%);
         }
-        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
         
-        /* Header */
-        .error-header { 
-            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-            padding: 40px; 
-            border-radius: 16px; 
-            margin-bottom: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-        .error-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(0,0,0,0.3);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 500;
-            margin-bottom: 16px;
-        }
-        .error-badge svg { width: 16px; height: 16px; }
-        .error-type { 
-            font-size: 14px; 
-            opacity: 0.85; 
-            margin-bottom: 8px;
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .error-message { 
-            font-size: 28px; 
-            font-weight: 700; 
-            line-height: 1.3;
-            margin-bottom: 20px;
-        }
-        .error-location { 
-            font-size: 14px; 
-            background: rgba(0,0,0,0.25); 
-            padding: 12px 18px; 
-            border-radius: 8px; 
-            font-family: 'JetBrains Mono', monospace;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .error-location-file { color: #fca5a5; }
-        .error-location-line { 
-            background: #fef2f2;
-            color: #991b1b;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-        
-        /* Sections */
-        .section { 
-            background: #18181b; 
-            border-radius: 16px; 
-            margin-bottom: 24px; 
+        .header {
+            background: var(--danger);
+            padding: 40px;
+            border-radius: 24px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 50px rgba(239, 68, 68, 0.2);
+            position: relative;
             overflow: hidden;
-            border: 1px solid #27272a;
         }
-        .section-header { 
-            background: #27272a; 
-            padding: 16px 24px; 
-            font-weight: 600;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-bottom: 1px solid #3f3f46;
+        .header::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.1));
         }
-        .section-header svg { width: 18px; height: 18px; opacity: 0.7; }
-        .section-body { padding: 0; }
-        
-        /* Code Snippet */
-        .code-snippet {
+        .error-type { font-family: 'JetBrains Mono', monospace; font-size: 14px; opacity: 0.8; margin-bottom: 10px; }
+        .error-msg { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 20px; }
+        .error-loc { 
+            background: rgba(0,0,0,0.2);
+            padding: 10px 20px;
+            border-radius: 12px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            overflow-x: auto;
-            background: #09090b;
-        }
-        .code-line {
-            display: flex;
-            min-height: 28px;
-        }
-        .code-line:hover { background: rgba(255,255,255,0.03); }
-        .code-line.highlight { 
-            background: rgba(220, 38, 38, 0.2);
-            border-left: 3px solid #dc2626;
-        }
-        .line-number {
-            min-width: 60px;
-            padding: 4px 16px;
-            text-align: right;
-            color: #52525b;
-            user-select: none;
-            border-right: 1px solid #27272a;
-            background: #0f0f11;
-        }
-        .code-line.highlight .line-number {
-            color: #fca5a5;
-            background: rgba(220, 38, 38, 0.1);
-        }
-        .line-content {
-            padding: 4px 16px;
-            white-space: pre;
-            flex: 1;
-        }
-        
-        /* Trace */
-        .trace-item { 
-            padding: 16px 24px; 
-            border-bottom: 1px solid #27272a;
-            font-size: 13px;
-            transition: background 0.15s;
-            cursor: pointer;
-        }
-        .trace-item:hover { background: #1f1f23; }
-        .trace-item:last-child { border-bottom: none; }
-        .trace-index {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 24px;
-            height: 24px;
-            background: #3f3f46;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-right: 12px;
-            color: #a1a1aa;
-        }
-        .trace-file { 
-            color: #60a5fa; 
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .trace-line { 
-            color: #f87171;
-            background: rgba(248, 113, 113, 0.1);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-left: 8px;
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .trace-function { 
-            color: #4ade80; 
-            font-family: 'JetBrains Mono', monospace;
-            margin-top: 6px;
-            display: block;
-        }
-        .trace-class { color: #c084fc; }
-        .trace-args { color: #fbbf24; }
-        
-        /* Info Grid */
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-        }
-        .info-table {
-            width: 100%;
-            font-size: 13px;
-        }
-        .info-table tr { border-bottom: 1px solid #27272a; }
-        .info-table tr:last-child { border-bottom: none; }
-        .info-table th {
-            text-align: left;
-            padding: 12px 16px;
-            color: #71717a;
-            font-weight: 500;
-            width: 140px;
-            vertical-align: top;
-        }
-        .info-table td {
-            padding: 12px 16px;
-            font-family: 'JetBrains Mono', monospace;
-            color: #a1a1aa;
-            word-break: break-all;
-        }
-        .info-table td .method {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: 600;
-            font-size: 11px;
-        }
-        .method-GET { background: #065f46; color: #6ee7b7; }
-        .method-POST { background: #1e40af; color: #93c5fd; }
-        .method-PUT { background: #92400e; color: #fcd34d; }
-        .method-DELETE { background: #991b1b; color: #fca5a5; }
-        
-        /* Footer */
-        .footer {
-            text-align: center;
-            padding: 30px;
-            color: #52525b;
-            font-size: 13px;
-        }
-        .footer a { color: #60a5fa; text-decoration: none; }
-        .footer a:hover { text-decoration: underline; }
-        
-        /* Tabs */
-        .tabs { display: flex; gap: 0; background: #27272a; }
-        .tab {
-            padding: 14px 24px;
-            cursor: pointer;
             font-size: 14px;
-            font-weight: 500;
-            color: #71717a;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
+            display: inline-block;
         }
-        .tab:hover { color: #a1a1aa; }
-        .tab.active { 
-            color: #ffffff; 
-            border-bottom-color: #dc2626;
-            background: #18181b;
+
+        .section {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            margin-bottom: 20px;
+            overflow: hidden;
         }
-        .tab-content { display: none; }
+        .tabs { display: flex; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border); }
+        .tab { 
+            padding: 15px 25px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--muted);
+            transition: all 0.3s;
+        }
+        .tab.active { color: #fff; background: rgba(255,255,255,0.05); }
+        .tab-content { display: none; padding: 20px; }
         .tab-content.active { display: block; }
+
+        .code-snippet { background: #000; border-radius: 16px; overflow: hidden; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+        .code-line { display: flex; min-height: 24px; }
+        .code-line.highlight { background: rgba(239, 68, 68, 0.15); border-left: 3px solid var(--danger); }
+        .line-num { min-width: 50px; padding-right: 15px; text-align: right; color: #4b5563; user-select: none; }
+        .line-code { white-space: pre; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; padding: 12px; color: var(--muted); border-bottom: 1px solid var(--border); width: 200px; }
+        td { padding: 12px; border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; color: #fff; }
+
+        .footer { text-align: center; margin-top: 40px; padding: 40px; border-top: 1px solid var(--border); }
+        .report-btn {
+            background: var(--accent); color: #fff; border: none; padding: 12px 30px; border-radius: 12px;
+            font-weight: 700; cursor: pointer; transition: transform 0.2s;
+        }
+        .report-btn:hover { transform: translateY(-2px); }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="error-header">
-            <div class="error-badge">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                </svg>
-                Sistem Hatası
-            </div>
+        <div class="header">
             <div class="error-type">{$class}</div>
-            <div class="error-message">{$message}</div>
-            <div class="error-location">
-                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-                </svg>
-                <span class="error-location-file">{$file}</span>
-                <span class="error-location-line">Satır {$line}</span>
+            <div class="error-msg">{$message}</div>
+            <div class="error-loc">
+                {$file} : <b>Satır {$line}</b>
             </div>
         </div>
         
         <div class="section">
             <div class="tabs">
-                <div class="tab active" onclick="showTab('code')">Kod</div>
+                <div class="tab active" onclick="showTab('code')">Kod Akışı</div>
                 <div class="tab" onclick="showTab('trace')">Stack Trace</div>
                 <div class="tab" onclick="showTab('request')">Request</div>
                 <div class="tab" onclick="showTab('server')">Server</div>
             </div>
             
             <div id="tab-code" class="tab-content active">
-                <div class="code-snippet">
-                    {$codeSnippet}
-                </div>
+                <div class="code-snippet">{$codeSnippet}</div>
             </div>
             
-            <div id="tab-trace" class="tab-content">
-                {$traceHtml}
-            </div>
+            <div id="tab-trace" class="tab-content">{$traceHtml}</div>
             
             <div id="tab-request" class="tab-content">
-                <table class="info-table">
-                    {$requestInfo}
-                </table>
+                <table>{$requestInfo}</table>
             </div>
             
             <div id="tab-server" class="tab-content">
-                <table class="info-table">
-                    {$serverInfo}
-                </table>
+                <table>{$serverInfo}</table>
             </div>
         </div>
-        
+
         <div class="footer">
-            <button onclick="sendErrorReport()" style="background:#dc2626;color:#fff;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-weight:600;margin-bottom:15px;transition:all 0.2s;">
-                📧 Hatayı Raporla
-            </button>
-            <p>IEF Framework &copy; 2026 | PHP <?= phpversion() ?> | 
-            <a href="javascript:location.reload()">Yenile</a></p>
+            <button class="report-btn" onclick="sendErrorReport()">📧 Hatayı Raporla</button>
+            <p style="margin-top:20px; color:var(--muted); font-size:12px;">
+                IEF Framework &copy; 2026 | PHP <?= phpversion() ?>
+            </p>
         </div>
     </div>
     
@@ -547,7 +375,7 @@ HTML;
     protected static function getCodeSnippet(string $file, int $line, int $context = 12): string
     {
         if (!file_exists($file) || !is_readable($file)) {
-            return '<div class="code-line"><span class="line-content">Dosya okunamadı</span></div>';
+            return '<div class="code-line"><span class="line-code">Dosya okunamadı</span></div>';
         }
 
         $lines = file($file);
@@ -562,8 +390,8 @@ HTML;
             $content = htmlspecialchars($lines[$i] ?? '');
 
             $html .= "<div class=\"{$class}\">";
-            $html .= "<span class=\"line-number\">{$lineNum}</span>";
-            $html .= "<span class=\"line-content\">{$content}</span>";
+            $html .= "<span class=\"line-num\">{$lineNum}</span>";
+            $html .= "<span class=\"line-code\">{$content}</span>";
             $html .= "</div>";
         }
 

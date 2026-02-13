@@ -72,8 +72,13 @@ class Database
 
     public function query(string $sql, array $params = []): \PDOStatement
     {
+        $start = microtime(true);
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
+        $time = microtime(true) - $start;
+
+        DebugBar::getInstance()->logQuery($sql, $params, $time);
+
         return $stmt;
     }
 

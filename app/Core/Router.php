@@ -119,6 +119,9 @@ class Router
             if (preg_match($pattern, $uri, $matches)) {
                 array_shift($matches);
 
+                // Log route to DebugBar
+                DebugBar::getInstance()->setRoute("{$route['method']} {$route['uri']}");
+
                 // Run Middlewares
                 foreach ($route['middleware'] as $middleware) {
                     if (!self::runMiddleware($middleware)) {
@@ -167,15 +170,13 @@ class Router
 
         return true;
     }
-
     protected static function runAction($action, array $params = []): void
     {
-        if (is_callable($action)) {
-            call_user_func_array($action, $params);
-            return;
-        }
+        $result = null;
 
-        if (is_string($action)) {
+        if (is_callable($action)) {
+            $result = call_user_func_array($action, $params);
+        } elseif (is_string($action)) {
             [$controller, $method] = explode('@', $action);
             $class = 'App\\Controllers\\' . $controller;
 
@@ -208,8 +209,15 @@ class Router
                     }
                 }
 
-                call_user_func_array([$instance, $method], $methodParams);
+                $result = call_user_func_array([$instance, $method], $methodParams);
             }
+        }
+
+        // Handle Response
+        if ($result instanceof Response) {
+            $result->send();
+        } elseif (is_string($result)) {
+            echo $result;
         }
     }
 }

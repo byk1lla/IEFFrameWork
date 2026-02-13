@@ -17,6 +17,7 @@ class App
     {
         self::$instance = $this;
         $this->loadConfig();
+        DebugBar::getInstance(); // Start timer
     }
 
     public static function getInstance(): ?App
