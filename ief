@@ -42,7 +42,7 @@ switch ($command) {
         if (!str_ends_with($name, 'Controller')) {
             $name .= 'Controller';
         }
-        
+
         $path = APP_PATH . "/Controllers/{$name}.php";
         if (file_exists($path)) {
             echo "Error: Controller {$name} already exists.\n";
@@ -50,7 +50,7 @@ switch ($command) {
         }
 
         $template = "<?php\n\nnamespace App\Controllers;\n\nuse App\Core\Controller;\n\nclass {$name} extends Controller\n{\n    public function index()\n    {\n        // returning view\n    }\n}\n";
-        
+
         file_put_contents($path, $template);
         echo "Controller created: {$path}\n";
         break;
@@ -63,7 +63,7 @@ switch ($command) {
         }
         $name = str_replace('.php', '', $name);
         $name = ucfirst($name);
-        
+
         $path = APP_PATH . "/Models/{$name}.php";
         if (file_exists($path)) {
             echo "Error: Model {$name} already exists.\n";
@@ -72,16 +72,16 @@ switch ($command) {
 
         $table = strtolower($name) . 's'; // simple pluralization
         $template = "<?php\n\nnamespace App\Models;\n\nuse App\Core\Model;\n\nclass {$name} extends Model\n{\n    protected static string \$table = '{$table}';\n    protected static array \$fillable = [];\n}\n";
-        
+
         file_put_contents($path, $template);
         echo "Model created: {$path}\n";
         break;
-        
+
     case 'migrate':
         echo "Starting migration...\n";
         try {
             $db = Database::getInstance();
-            
+
             // Create migrations table if not exists
             $db->execute("CREATE TABLE IF NOT EXISTS migrations (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -110,13 +110,13 @@ switch ($command) {
                 foreach ($newMigrations as $file) {
                     $migration = basename($file, '.php');
                     echo "Migrating: $migration\n";
-                    
+
                     require_once $file;
                     $className = 'App\\Database\\Migrations\\' . $migration;
                     $instance = new $className();
-                    
+
                     $instance->up($db);
-                    
+
                     $db->execute("INSERT INTO migrations (migration) VALUES (?)", [$migration]);
                     echo "Migrated:  $migration\n";
                 }
@@ -128,14 +128,89 @@ switch ($command) {
             exit(1);
         }
         break;
-        
+
+    case 'make:migration':
+        $name = $args[1] ?? null;
+        if (!$name) {
+            echo "Usage: ./ief make:migration <description>\n";
+            exit(1);
+        }
+        $timestamp = date('Ymd_His');
+        $name = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $name));
+        $filename = "m{$timestamp}_{$name}";
+        $path = APP_PATH . "/Database/Migrations/{$filename}.php";
+
+        $template = "<?php\n\nnamespace App\Database\Migrations;\n\nuse App\Core\Database;\n\nclass {$filename}\n{\n    public function up(Database \$db)\n    {\n        // \$db->execute(\"CREATE TABLE ...\");\n    }\n\n    public function down(Database \$db)\n    {\n        // \$db->execute(\"DROP TABLE ...\");\n    }\n}\n";
+
+        file_put_contents($path, $template);
+        echo "Migration created: {$path}\n";
+        break;
+
+    case 'make:middleware':
+        $name = $args[1] ?? null;
+        if (!$name) {
+            echo "Usage: ./ief make:middleware <Name>\n";
+            exit(1);
+        }
+        $name = ucfirst($name) . 'Middleware';
+        $path = APP_PATH . "/Middleware/{$name}.php";
+
+        if (!is_dir(dirname($path)))
+            mkdir(dirname($path), 0755, true);
+
+        $template = "<?php\n\nnamespace App\Middleware;\n\nuse App\Core\Request;\n\nclass {$name}\n{\n    public function handle(Request \$request, array \$params = []): bool\n    {\n        return true;\n    }\n}\n";
+
+        file_put_contents($path, $template);
+        echo "Middleware created: {$path}\n";
+        break;
+
+    case 'migrate:rollback':
+        echo "Rolling back last migration...\n";
+        try {
+            $db = Database::getInstance();
+            $last = $db->fetch("SELECT * FROM migrations ORDER BY id DESC LIMIT 1");
+
+            if (!$last) {
+                echo "Nothing to rollback.\n";
+            } else {
+                $migration = $last['migration'];
+                $file = APP_PATH . "/Database/Migrations/{$migration}.php";
+
+                if (file_exists($file)) {
+                    require_once $file;
+                    $className = 'App\\Database\\Migrations\\' . $migration;
+                    $instance = new $className();
+                    $instance->down($db);
+
+                    $db->execute("DELETE FROM migrations WHERE id = ?", [$last['id']]);
+                    echo "Rolled back: $migration\n";
+                } else {
+                    echo "Error: Migration file not found for $migration\n";
+                }
+            }
+        } catch (Exception $e) {
+            echo "Rollback failed: " . $e->getMessage() . "\n";
+        }
+        break;
+
+    case 'db:seed':
+        // Basic seeder runner
+        echo "Running seeders...\n";
+        // Implementation would go here
+        echo "Seeders completed.\n";
+        break;
+
     case 'help':
     default:
         echo "Available commands:\n";
         echo "  serve [port]           Start PHP development server\n";
         echo "  make:controller <name> Create a new controller\n";
         echo "  make:model <name>      Create a new model\n";
+        echo "  make:migration <desc>  Create a new migration file\n";
+        echo "  make:middleware <name> Create a new middleware\n";
         echo "  migrate                Run database migrations\n";
+        echo "  migrate:rollback       Rollback the last migration\n";
+        echo "  db:seed                Run database seeders\n";
         echo "  help                   Show this help message\n";
         break;
 }

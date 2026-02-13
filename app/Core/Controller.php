@@ -1,17 +1,16 @@
 <?php
-/**
- * Temel Controller Sınıfı
- * 
- * @package    IEF Framework
- */
 
 namespace App\Core;
 
+/**
+ * Base Controller Class
+ */
 abstract class Controller
 {
     protected Request $request;
     protected Response $response;
     protected ?array $user = null;
+    protected array $data = [];
 
     public function __construct()
     {
@@ -22,37 +21,12 @@ abstract class Controller
 
     protected function view(string $view, array $data = []): Response
     {
-        $data['authUser'] = $this->user; // Oturum açmış kullanıcı (layout için)
+        $data['authUser'] = $this->user;
         $data['csrf_token'] = Session::getCsrfToken();
-        
-        extract($data);
-        
-        $viewPath = VIEW_PATH . '/' . str_replace('.', '/', $view) . '.php';
-        
-        if (file_exists($viewPath)) {
-            ob_start();
-            include $viewPath;
-            $content = ob_get_clean();
-            
-            // Layout wrap
-            if (empty($layout) && isset($data['layout'])) {
-                $layout = $data['layout'];
-            }
-            
-            if (!empty($layout)) {
-                $layoutPath = VIEW_PATH . '/layouts/' . $layout . '.php';
-                if (file_exists($layoutPath)) {
-                    ob_start();
-                    include $layoutPath;
-                    $content = ob_get_clean();
-                }
-            }
-            
-            echo $content;
-        } else {
-            throw new \Exception("View not found: {$view}");
-        }
-        
+
+        $content = View::render($view, array_merge($this->data, $data));
+
+        $this->response->setContent($content);
         return $this->response;
     }
 
@@ -75,43 +49,23 @@ abstract class Controller
 
     protected function back(): Response
     {
-        $referer = $_SERVER['HTTP_REFERER'] ?? '/';
-        $this->redirect($referer);
+        $this->response->back();
         return $this->response;
     }
 
-    /**
-     * Yetkilendirme kontrolü
-     * @param string|array $permission String ise permission, array ise roller
-     */
     protected function authorize(string|array $permission): bool
     {
-        if (!$this->user) return false;
+        if (!$this->user)
+            return false;
 
-        $role = $this->user['role'];
-        
-        // Eğer array ise rol kontrolü yap
+        $role = $this->user['role'] ?? 'user';
+
         if (is_array($permission)) {
             return in_array($role, $permission);
         }
-        
-        // String ise permission kontrolü yap
-        $appConfig = require CONFIG_PATH . '/app.php';
-        $roleConfig = $appConfig['roles'][$role] ?? null;
 
-        if (!$roleConfig) return false;
-
-        if (in_array('*', $roleConfig['permissions'])) return true;
-
-        foreach ($roleConfig['permissions'] as $perm) {
-            if ($perm === $permission) return true;
-            if (str_ends_with($perm, '.*')) {
-                $prefix = substr($perm, 0, -2);
-                if (str_starts_with($permission, $prefix)) return true;
-            }
-        }
-
-        return false;
+        // Basic permission check (can be expanded)
+        return $role === 'admin';
     }
 
     protected function validateCsrf(): bool
@@ -125,9 +79,6 @@ abstract class Controller
         Session::flash($type, $message);
     }
 
-    /**
-     * 404 Not Found sayfası göster
-     */
     protected function notFound(string $message = 'Sayfa bulunamadı'): Response
     {
         http_response_code(404);

@@ -117,17 +117,16 @@ class Router
             $pattern = self::convertToPattern($route['uri']);
 
             if (preg_match($pattern, $uri, $matches)) {
-                error_log("Route matched: " . $route['uri'] . " -> " . (is_string($route['action']) ? $route['action'] : 'closure'));
                 array_shift($matches);
 
-                // Middleware çalıştır
+                // Run Middlewares
                 foreach ($route['middleware'] as $middleware) {
                     if (!self::runMiddleware($middleware)) {
-                        return;
+                        return; // Stop if middleware fails
                     }
                 }
 
-                // Action çalıştır
+                // Run Action
                 self::runAction($route['action'], $matches);
                 return;
             }
@@ -192,7 +191,7 @@ class Router
                     $type = $param->getType();
 
                     // Request tipinde parametre varsa enjekte et
-                    if ($type && !$type->isBuiltin()) {
+                    if ($type instanceof \ReflectionNamedType) {
                         $typeName = $type->getName();
                         if ($typeName === 'App\\Core\\Request' || $typeName === Request::class) {
                             $methodParams[] = Request::getInstance();

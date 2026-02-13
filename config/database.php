@@ -1,11 +1,11 @@
 <?php
 
 return [
-    'driver' => 'sqlite', // Options: mysql, sqlite
+    'driver' => 'mysql', // Options: mysql, sqlite
     'host' => 'localhost',
-    'database' => 'edm-mobile',
-    'username' => 'root',
-    'password' => 'efeece16',
+    'database' => 'your_database',
+    'username' => 'your_username',
+    'password' => 'your_password',
     'path' => STORAGE_PATH . '/database.sqlite', // For SQLite
     'charset' => 'utf8mb4',
     'collation' => 'utf8mb4_unicode_ci',

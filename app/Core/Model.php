@@ -16,9 +16,16 @@ abstract class Model
     protected static bool $useUuid = true;
     protected static array $fillable = [];
     protected static array $hidden = ['password_hash'];
-    
+
     protected array $attributes = [];
     protected array $original = [];
+
+    // Query Builder State
+    protected array $wheres = [];
+    protected array $orders = [];
+    protected ?int $limit = null;
+    protected ?int $offset = null;
+    protected array $params = [];
 
     public function __construct(array $attributes = [])
     {
@@ -73,8 +80,7 @@ abstract class Model
 
     public static function find($id): ?array
     {
-        $sql = "SELECT * FROM " . static::$table . " WHERE " . static::$primaryKey . " = ?";
-        return self::db()->fetch($sql, [$id]);
+        return static::query()->where(static::$primaryKey, $id)->first();
     }
 
     public static function findOrFail($id): array
@@ -86,18 +92,6 @@ abstract class Model
         return $result;
     }
 
-    public static function where(string $column, $value, string $operator = '='): array
-    {
-        $sql = "SELECT * FROM " . static::$table . " WHERE {$column} {$operator} ?";
-        return self::db()->fetchAll($sql, [$value]);
-    }
-
-    public static function whereFirst(string $column, $value, string $operator = '='): ?array
-    {
-        $sql = "SELECT * FROM " . static::$table . " WHERE {$column} {$operator} ? LIMIT 1";
-        return self::db()->fetch($sql, [$value]);
-    }
-
     public static function create(array $data): string
     {
         if (static::$useUuid && !isset($data[static::$primaryKey])) {
@@ -106,7 +100,7 @@ abstract class Model
 
         $columns = implode(', ', array_keys($data));
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
-        
+
         $sql = "INSERT INTO " . static::$table . " ({$columns}) VALUES ({$placeholders})";
         self::db()->execute($sql, array_values($data));
 
@@ -117,10 +111,10 @@ abstract class Model
     {
         $set = implode(' = ?, ', array_keys($data)) . ' = ?';
         $sql = "UPDATE " . static::$table . " SET {$set} WHERE " . static::$primaryKey . " = ?";
-        
+
         $values = array_values($data);
         $values[] = $id;
-        
+
         return self::db()->execute($sql, $values) > 0;
     }
 
@@ -140,31 +134,115 @@ abstract class Model
         return (int) ($result['total'] ?? 0);
     }
 
-    public static function paginate(int $page = 1, int $perPage = 20, ?string $where = null, array $params = [], string $orderBy = 'created_at DESC'): array
+    // --- Fluent Query Builder ---
+
+    public static function query(): static
     {
-        $offset = ($page - 1) * $perPage;
-        
-        $countSql = "SELECT COUNT(*) as total FROM " . static::$table;
-        if ($where) {
-            $countSql .= " WHERE {$where}";
-        }
-        $totalResult = self::db()->fetch($countSql, $params);
-        $total = (int) ($totalResult['total'] ?? 0);
+        return new static();
+    }
 
+    public function where(string $column, $value, string $operator = '='): self
+    {
+        $this->wheres[] = "{$column} {$operator} ?";
+        $this->params[] = $value;
+        return $this;
+    }
+
+    public function orWhere(string $column, $value, string $operator = '='): self
+    {
+        $this->wheres[] = "OR {$column} {$operator} ?";
+        $this->params[] = $value;
+        return $this;
+    }
+
+    public function orderBy(string $column, string $direction = 'ASC'): self
+    {
+        $this->orders[] = "{$column} {$direction}";
+        return $this;
+    }
+
+    public function limit(int $limit): self
+    {
+        $this->limit = $limit;
+        return $this;
+    }
+
+    public function offset(int $offset): self
+    {
+        $this->offset = $offset;
+        return $this;
+    }
+
+    public function get(): array
+    {
         $sql = "SELECT * FROM " . static::$table;
-        if ($where) {
-            $sql .= " WHERE {$where}";
-        }
-        $sql .= " ORDER BY {$orderBy} LIMIT {$perPage} OFFSET {$offset}";
-        
-        $data = self::db()->fetchAll($sql, $params);
+        $sql .= $this->buildQueryChunks();
 
-        return [
-            'data' => $data,
-            'total' => $total,
-            'per_page' => $perPage,
-            'current_page' => $page,
-            'last_page' => (int) ceil($total / $perPage),
-        ];
+        return self::db()->fetchAll($sql, $this->params);
+    }
+
+    public function first(): ?array
+    {
+        $this->limit = 1;
+        $results = $this->get();
+        return $results[0] ?? null;
+    }
+
+    protected function buildQueryChunks(): string
+    {
+        $sql = "";
+
+        // Soft Delete check
+        if (property_exists($this, 'useSoftDeletes') && static::$useSoftDeletes) {
+            $this->where('deleted_at', null, 'IS');
+        }
+
+        if (!empty($this->wheres)) {
+            $sql .= " WHERE " . implode(' AND ', $this->wheres);
+            // Fix OR prefixes
+            $sql = str_replace('WHERE OR', 'WHERE', $sql);
+        }
+
+        if (!empty($this->orders)) {
+            $sql .= " ORDER BY " . implode(', ', $this->orders);
+        }
+
+        if ($this->limit !== null) {
+            $sql .= " LIMIT {$this->limit}";
+        }
+
+        if ($this->offset !== null) {
+            $sql .= " OFFSET {$this->offset}";
+        }
+
+        return $sql;
+    }
+
+    // --- Relationships ---
+
+    protected function hasMany(string $relatedClass, string $foreignKey, string $localKey = 'id'): array
+    {
+        return $relatedClass::where($foreignKey, $this->attributes[$localKey]);
+    }
+
+    protected function belongsTo(string $relatedClass, string $foreignKey, string $ownerKey = 'id'): ?array
+    {
+        return $relatedClass::find($this->attributes[$foreignKey]);
+    }
+
+    // --- Soft Deletes ---
+
+    public function softDelete(): bool
+    {
+        return static::update($this->attributes[static::$primaryKey], [
+            'deleted_at' => date('Y-m-d H:i:s')
+        ]);
+    }
+
+    public static function withTrashed(): self
+    {
+        $instance = new static();
+        // Conceptually, would need to bypass deleted_at filter in buildQueryChunks
+        return $instance;
     }
 }
