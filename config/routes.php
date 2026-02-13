@@ -15,3 +15,17 @@ Router::post('/tasks/{id}/delete', 'TaskController@delete');
 // Router::get('/login', 'AuthController@loginForm');
 // Router::post('/login', 'AuthController@login');
 // Router::get('/logout', 'AuthController@logout');
+
+// Error Reporting API
+Router::post('/api/report-error', 'ErrorReporterController@report');
+
+// Admin Dashboard
+Router::get('/admin', 'AdminController@index');
+
+// Documentation
+Router::get('/docs', function () {
+    return \App\Core\View::render('docs.index');
+});
+
+// Examples Hub
+Router::get('/examples', 'ExampleController@index');

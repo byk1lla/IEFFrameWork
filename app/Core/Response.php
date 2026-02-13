@@ -34,11 +34,17 @@ class Response
     public function send(): void
     {
         http_response_code($this->statusCode);
-        
+
         foreach ($this->headers as $name => $value) {
             header("{$name}: {$value}");
         }
-        
+
+        // Inject Debug Bar if enabled
+        if (ExceptionHandler::isDebug() && strpos($this->content, '</body>') !== false) {
+            $debugHtml = DebugBar::getInstance()->render();
+            $this->content = str_replace('</body>', $debugHtml . '</body>', $this->content);
+        }
+
         echo $this->content;
     }
 
@@ -78,7 +84,7 @@ class Response
         header('Content-Disposition: attachment; filename="' . $fileName . '"');
         header('Content-Length: ' . filesize($filePath));
         header('Cache-Control: private, max-age=0, must-revalidate');
-        
+
         readfile($filePath);
         exit;
     }
@@ -92,10 +98,10 @@ class Response
         }
 
         $mimeType = mime_content_type($filePath) ?: 'application/octet-stream';
-        
+
         header('Content-Type: ' . $mimeType);
         header('Content-Length: ' . filesize($filePath));
-        
+
         readfile($filePath);
         exit;
     }
@@ -119,7 +125,7 @@ class Response
     public static function abort(int $code, string $message = ''): void
     {
         http_response_code($code);
-        
+
         $messages = [
             400 => 'Bad Request',
             401 => 'Unauthorized',
@@ -130,7 +136,7 @@ class Response
         ];
 
         $message = $message ?: ($messages[$code] ?? 'Error');
-        
+
         echo "<h1>{$code}</h1><p>{$message}</p>";
         exit;
     }
