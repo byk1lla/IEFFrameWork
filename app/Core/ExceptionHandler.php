@@ -26,7 +26,7 @@ class ExceptionHandler
 
         // HTTP status code
         $statusCode = self::getStatusCode($e);
-        
+
         if (!headers_sent()) {
             http_response_code($statusCode);
         }
@@ -63,18 +63,18 @@ class ExceptionHandler
         if (!headers_sent()) {
             header('Content-Type: application/json; charset=utf-8');
         }
-        
+
         $response = [
             'success' => false,
             'error' => self::$debug ? $e->getMessage() : 'Bir hata oluştu',
         ];
-        
+
         if (self::$debug) {
             $response['exception'] = get_class($e);
             $response['file'] = $e->getFile();
             $response['line'] = $e->getLine();
         }
-        
+
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
         exit;
     }
@@ -87,6 +87,11 @@ class ExceptionHandler
         self::$debug = $debug;
     }
 
+    public static function isDebug(): bool
+    {
+        return self::$debug;
+    }
+
     /**
      * Exception'ı logla
      */
@@ -94,7 +99,7 @@ class ExceptionHandler
     {
         $logFile = dirname(__DIR__, 2) . '/storage/logs/error-' . date('Y-m-d') . '.log';
         $logDir = dirname($logFile);
-        
+
         if (!is_dir($logDir)) {
             mkdir($logDir, 0755, true);
         }
@@ -122,7 +127,7 @@ class ExceptionHandler
         }
 
         $code = $e->getCode();
-        
+
         if (is_int($code) && $code >= 400 && $code < 600) {
             return $code;
         }
@@ -143,7 +148,7 @@ class ExceptionHandler
 
         // Kod snippet'ı al
         $codeSnippet = self::getCodeSnippet($file, $line);
-        
+
         // Stack trace HTML oluştur
         $traceHtml = self::buildTraceHtml($trace);
 
@@ -157,7 +162,7 @@ class ExceptionHandler
         $traceJson = json_encode($trace);
         $requestJson = json_encode(self::collectRequestData());
         $serverJson = json_encode(self::collectServerData());
-        
+
         // String verileri de JSON encode et (güvenlik için)
         $classJson = json_encode($class);
         $messageJson = json_encode($message);
@@ -555,7 +560,7 @@ HTML;
             $isHighlight = $lineNum === $line;
             $class = $isHighlight ? 'code-line highlight' : 'code-line';
             $content = htmlspecialchars($lines[$i] ?? '');
-            
+
             $html .= "<div class=\"{$class}\">";
             $html .= "<span class=\"line-number\">{$lineNum}</span>";
             $html .= "<span class=\"line-content\">{$content}</span>";
@@ -571,7 +576,7 @@ HTML;
     protected static function buildTraceHtml(array $trace): string
     {
         $html = '';
-        
+
         foreach ($trace as $index => $frame) {
             $file = $frame['file'] ?? '[internal]';
             $line = $frame['line'] ?? '?';
@@ -606,7 +611,7 @@ HTML;
     protected static function formatArgs(array $args): string
     {
         $formatted = [];
-        
+
         foreach ($args as $arg) {
             if (is_string($arg)) {
                 $str = strlen($arg) > 50 ? substr($arg, 0, 50) . '...' : $arg;
@@ -636,7 +641,7 @@ HTML;
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'CLI';
         $methodClass = 'method-' . $method;
-        
+
         $rows = [
             ['Method', "<span class=\"method {$methodClass}\">{$method}</span>"],
             ['URI', $_SERVER['REQUEST_URI'] ?? '-'],
@@ -730,7 +735,7 @@ HTML;
     {
         $units = ['B', 'KB', 'MB', 'GB'];
         $i = 0;
-        
+
         while ($bytes >= 1024 && $i < count($units) - 1) {
             $bytes /= 1024;
             $i++;
@@ -744,7 +749,7 @@ HTML;
      */
     protected static function renderProductionPage(int $statusCode): void
     {
-        $title = match($statusCode) {
+        $title = match ($statusCode) {
             404 => 'Sayfa Bulunamadı',
             403 => 'Erişim Reddedildi',
             401 => 'Yetkilendirme Gerekli',
@@ -753,7 +758,7 @@ HTML;
             default => 'Bir Hata Oluştu'
         };
 
-        $message = match($statusCode) {
+        $message = match ($statusCode) {
             404 => 'Aradığınız sayfa bulunamadı.',
             403 => 'Bu sayfaya erişim yetkiniz yok.',
             401 => 'Bu işlem için giriş yapmanız gerekiyor.',
