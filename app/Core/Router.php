@@ -19,24 +19,24 @@ class Router
         '{stopId}' => '([a-zA-Z0-9\-]+)',
     ];
 
-    public static function get(string $uri, $action): void
+    public static function get(string $uri, $action, array $options = []): void
     {
-        self::addRoute('GET', $uri, $action);
+        self::addRoute('GET', $uri, $action, $options);
     }
 
-    public static function post(string $uri, $action): void
+    public static function post(string $uri, $action, array $options = []): void
     {
-        self::addRoute('POST', $uri, $action);
+        self::addRoute('POST', $uri, $action, $options);
     }
 
-    public static function put(string $uri, $action): void
+    public static function put(string $uri, $action, array $options = []): void
     {
-        self::addRoute('PUT', $uri, $action);
+        self::addRoute('PUT', $uri, $action, $options);
     }
 
-    public static function delete(string $uri, $action): void
+    public static function delete(string $uri, $action, array $options = []): void
     {
-        self::addRoute('DELETE', $uri, $action);
+        self::addRoute('DELETE', $uri, $action, $options);
     }
 
     public static function group(array $attributes, callable $callback): void
@@ -46,10 +46,10 @@ class Router
         array_pop(self::$groupStack);
     }
 
-    protected static function addRoute(string $method, string $uri, $action): void
+    protected static function addRoute(string $method, string $uri, $action, array $options = []): void
     {
         $prefix = '';
-        $middleware = [];
+        $middleware = (array) ($options['middleware'] ?? []);
 
         foreach (self::$groupStack as $group) {
             if (isset($group['prefix'])) {
@@ -148,9 +148,14 @@ class Router
     {
         $pattern = preg_quote($uri, '#');
 
+        // Handle specific patterns first
         foreach (self::$patterns as $placeholder => $regex) {
             $pattern = str_replace(preg_quote($placeholder, '#'), $regex, $pattern);
         }
+
+        // Handle generic {parameter} pattern
+        // preg_quote converts {param} to \{param\}
+        $pattern = preg_replace('#\\\\\{([a-zA-Z0-9\_]+)\\\\\}#', '([^/]+)', $pattern);
 
         return '#^' . $pattern . '$#';
     }

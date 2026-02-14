@@ -6,7 +6,7 @@ return [
     'database' => 'framework',
     'username' => 'root',
     'password' => '',
-    'path' => STORAGE_PATH . '/database.sqlite', // For SQLite
+    'path' => ROOT_PATH . '/public/database_v5.sqlite', // For SQLite
     'charset' => 'utf8mb4',
     'collation' => 'utf8mb4_unicode_ci',
     'port' => 3306,

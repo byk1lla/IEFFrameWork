@@ -33,10 +33,11 @@ class Session
         ]);
 
         // Session dosyalarını proje içinde sakla
-        $sessionPath = defined('STORAGE_PATH') ? STORAGE_PATH . '/sessions' : __DIR__ . '/../../storage/sessions';
-        if (is_dir($sessionPath)) {
-            session_save_path($sessionPath);
+        $sessionPath = ROOT_PATH . '/sessions';
+        if (!is_dir($sessionPath)) {
+            mkdir($sessionPath, 0777, true);
         }
+        session_save_path($sessionPath);
 
         session_start();
         self::$started = true;

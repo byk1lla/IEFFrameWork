@@ -37,7 +37,14 @@ class Database
         try {
             if ($driver === 'sqlite') {
                 $this->pdo = new PDO(
-                    'sqlite:' . ($this->config['path'] ?? STORAGE_PATH . '/database.sqlite')
+                    'sqlite:' . ($this->config['path'] ?? STORAGE_PATH . '/database.sqlite'),
+                    null,
+                    null,
+                    [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                        PDO::ATTR_EMULATE_PREPARES => false,
+                    ]
                 );
             } else {
                 $dsn = sprintf(
@@ -74,7 +81,8 @@ class Database
     {
         $start = microtime(true);
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
+        // Explicitly cast to strings for SQLite stability
+        $stmt->execute(array_map('strval', $params));
         $time = microtime(true) - $start;
 
         DebugBar::getInstance()->logQuery($sql, $params, $time);

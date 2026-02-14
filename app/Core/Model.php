@@ -13,7 +13,7 @@ abstract class Model
 {
     protected static string $table = '';
     protected static string $primaryKey = 'id';
-    protected static bool $useUuid = true;
+    protected static bool $useUuid = false;
     protected static array $fillable = [];
     protected static array $hidden = ['password_hash'];
 
@@ -75,15 +75,17 @@ abstract class Model
     public static function all(): array
     {
         $sql = "SELECT * FROM " . static::$table;
-        return self::db()->fetchAll($sql);
+        $results = self::db()->fetchAll($sql);
+        return array_map(fn($item) => new static($item), $results);
     }
 
-    public static function find($id): ?array
+    public static function find($id): ?static
     {
-        return static::query()->where(static::$primaryKey, $id)->first();
+        $result = static::query()->where(static::$primaryKey, $id)->first();
+        return $result;
     }
 
-    public static function findOrFail($id): array
+    public static function findOrFail($id): static
     {
         $result = self::find($id);
         if (!$result) {
@@ -92,19 +94,28 @@ abstract class Model
         return $result;
     }
 
-    public static function create(array $data): string
+    public static function create(array $data): static
     {
+        // Filter by fillable
+        if (!empty(static::$fillable)) {
+            $data = array_intersect_key($data, array_flip(static::$fillable));
+        }
+
         if (static::$useUuid && !isset($data[static::$primaryKey])) {
             $data[static::$primaryKey] = Uuid::v4()->toRfc4122();
+        } elseif (!static::$useUuid) {
+            unset($data[static::$primaryKey]);
         }
 
         $columns = implode(', ', array_keys($data));
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
 
         $sql = "INSERT INTO " . static::$table . " ({$columns}) VALUES ({$placeholders})";
-        self::db()->execute($sql, array_values($data));
+        $db = self::db();
+        $db->execute($sql, array_values($data));
 
-        return $data[static::$primaryKey] ?? self::db()->lastInsertId();
+        $id = $data[static::$primaryKey] ?? $db->getPdo()->lastInsertId();
+        return static::find($id);
     }
 
     public static function update($id, array $data): bool
@@ -181,11 +192,12 @@ abstract class Model
         return self::db()->fetchAll($sql, $this->params);
     }
 
-    public function first(): ?array
+    public function first(): ?static
     {
         $this->limit = 1;
         $results = $this->get();
-        return $results[0] ?? null;
+        $data = $results[0] ?? null;
+        return $data ? new static($data) : null;
     }
 
     protected function buildQueryChunks(): string

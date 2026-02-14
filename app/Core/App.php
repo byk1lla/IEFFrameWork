@@ -46,6 +46,9 @@ class App
         // Session başlat
         Session::start();
 
+        // Dil yükle
+        \App\Core\Lang::load();
+
         // Router çalıştır
         require CONFIG_PATH . '/routes.php';
         Router::dispatch();
