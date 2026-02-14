@@ -32,9 +32,6 @@ Router::get('/docs', function () {
 // Examples Hub
 Router::get('/examples', 'ExampleController@index');
 
-// Modern Blog
-Router::get('/blog', 'BlogController@index');
-Router::get('/blog/{id}', 'BlogController@show');
 
 // Contact Hub
 Router::get('/contact', 'ContactController@index');

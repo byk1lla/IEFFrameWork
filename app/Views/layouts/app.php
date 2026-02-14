@@ -162,7 +162,6 @@
                     <a href="/lang/tr" class="{{ \App\Core\Lang::getLocale() === 'tr' ? 'active' : '' }}">TR</a>
                     <a href="/lang/en" class="{{ \App\Core\Lang::getLocale() === 'en' ? 'active' : '' }}">EN</a>
                 </div>
-                <a href="/blog">{{ trans('experience') }}</a>
                 <a href="/docs">{{ trans('knowledge') }}</a>
                 <a href="/examples">{{ trans('ecosystem') }}</a>
                 <a href="/admin" class="btn-v4">{{ trans('control_center') }}</a>
@@ -175,7 +174,7 @@
     </main>
 
     <footer>
-        IEF Framework V4 • Titanium Obsidian • 2026
+        IEF Framework V5.1 • Titanium Obsidian • 2026
     </footer>
 </body>
 
