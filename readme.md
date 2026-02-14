@@ -1,41 +1,40 @@
-# 🦅 IEF Framework
+# 🦅 IEF Framework | Titan Global
 
-> **Version:** 1.0.0  
+> **Version:** 1.2.0 "Titan Global"  
 > **Author:** IEF Software  
 > **License:** MIT
 
 ## 🌟 Hakkında
 
-**IEF Framework**, modern PHP uygulamaları geliştirmek için tasarlanmış, **hafif (lightweight)**, **hızlı** ve **esnek** bir MVC (Model-View-Controller) çatısıdır. Gereksiz karmaşıklıktan uzak, anlaşılır yapısı ile hem öğrenmesi kolaydır hem de profesyonel projeler için güçlü bir temel sunar.
+**IEF Framework**, modern PHP uygulamaları geliştirmek için tasarlanmış, **hafif (lightweight)**, **ultra hızlı** ve **elit** bir MVC (Model-View-Controller) çatısıdır. V1.2.0 "Titan Global" sürümü ile birlikte, mimari stabilite ve üst düzey geliştirici deneyimi (Developer Experience) ön plana çıkarılmıştır.
 
-Framework; gelişmiş yönlendirme (routing), güvenli veritabanı işlemler (PDO & Active Record), otomatik CSRF koruması ve esnek middleware desteği ile gelir.
+Framework; gelişmiş yönlendirme (routing), **Obsidian ORM**, **Titan Guard** kimlik doğrulama, **Titan Pulse** görsel hata ayıklayıcı ve esnek middleware desteği ile gelir.
 
 ---
 
-## 🚀 Özellikler
+## 🚀 Öne Çıkan Özellikler
 
-- **⚡ Yüksek Performans:** Gereksiz yüklerden arındırılmış çekirdek yapı.
-- **🛣️ Gelişmiş Router:** RESTful rotalar, parametre desteği, gruplama ve middleware entegrasyonu.
-- **💾 Active Record ORM:** Veritabanı işlemlerini nesne tabanlı ve güvenli bir şekilde yönetin (UUID desteği dahil).
-- **🛡️ Güvenlik:** Dahili CSRF koruması, XSS filtreleme ve SQL Injection'a karşı PDO kullanımı.
-- **🔌 CLI Aracı:** Proje yönetimi için `ief` konsol uygulaması.
-- **📄 Şablon Motoru:** Yalın PHP tabanlı, performanslı view sistemi.
-- **🔧 Helper Fonksiyonlar:** Geliştirme sürecini hızlandıran yardımcı araçlar.
+- **⚡ Titan Core Performance:** Gereksiz yüklerden arındırılmış, optimize edilmiş çekirdek yapı.
+- **🛡️ Titan Guard (Auth):** Dahili, güvenli ve estetik kimlik doğrulama sistemi (Login/Register/Middleware).
+- **📡 Titan Pulse (Debugger):** Glassmorphism tasarımlı, gerçek zamanlı SQL, Latency ve Memory takibi.
+- **💾 Obsidian ORM:** Nesne tabanlı, "Lazy Building" destekli ve UUID/Auto-increment uyumlu veritabanı yönetimi.
+- **🛣️ Titan Router:** RESTful rotalar, middleware gruplama ve akıllı enjeksiyon desteği.
+- **💎 Premium Aesthetic:** Dark-mode odaklı, neon cyan vurgularla modern ve profesyonel arayüzler.
 
 ---
 
 ## 🛠️ Kurulum
 
 ### Gereksinimler
-- PHP 8.0 veya üzeri
+- PHP 8.1 veya üzeri
 - Composer
-- SQLite veya MySQL/MariaDB
+- SQLite (Önerilen) veya MySQL/MariaDB
 
-### Yeni Proje Oluşturma
+### Hızlı Başlangıç
 
 1. **Projeyi Klonlayın:**
    ```bash
-   git clone https://github.com/iefsoftware/ief-framework.git my-app
+   git clone https://github.com/byk1lla/IEFFrameWork.git my-app
    cd my-app
    ```
 
@@ -44,152 +43,58 @@ Framework; gelişmiş yönlendirme (routing), güvenli veritabanı işlemler (PD
    composer install
    ```
 
-3. **Yapılandırma:**
-   `config/database.php` ve `config/app.php` dosyalarını projenize göre düzenleyin. Varsayılan olarak SQLite kullanır.
+3. **Veritabanı Hazırlığı:**
+   Varsayılan olarak `database_v5.sqlite` kullanılır. Migrasyonları çalıştırmak için:
+   ```bash
+   ./ief migrate
+   ```
 
 4. **Sunucuyu Başlatın:**
    ```bash
    ./ief serve
    ```
-   Tarayıcınızda `http://localhost:8000` adresine gidin.
+   Tarayıcınızda `http://localhost:8000` adresine gidin. Pilot hesap: `nexus@core.id` / `matrix123`
 
 ---
 
-## 📖 Kullanım Kılavuzu
+## 📖 Mimari Yapı
 
 ### 1. Dizin Yapısı
 ```
 /
 ├── app/
-│   ├── Controllers/   # İstekleri karşılayan sınıflar
-│   ├── Core/          # Framework çekirdek dosyaları
-│   ├── Models/        # Veritabanı modelleri
-│   ├── Views/         # Arayüz dosyaları (HTML/PHP)
-│   └── Helpers/       # Yardımcı fonksiyonlar
-├── config/            # Ayar dosyaları (App, Database, Routes)
-├── public/            # Web sunucusu kök dizini (assets vb.)
-├── storage/           # Loglar ve veritabanı (SQLite)
+│   ├── Controllers/   # Business logic (AuthController, AdminController vb.)
+│   ├── Core/          # Framework çekirdeği (Titan Core Engine)
+│   ├── Models/        # Obsidian Modelleri
+│   ├── Middleware/    # Titan Guard koruma katmanları
+│   └── Helpers/       # Elit yardımcı araçlar
+├── config/            # Yapılandırma matrisi (App, Database, Routes)
+├── public/            # Web sunucusu giriş noktası ve assets
+├── storage/           # Loglar ve SQLite veritabanı
 ├── vendor/            # Composer paketleri
-├── ief                # CLI aracı
-└── index.php          # Giriş noktası
+├── ief                # Aether CLI aracı
+└── index.php          # Global Matrix giriş noktası
 ```
 
-### 2. Yönlendirme (Routing)
+### 2. Titan Guard & Güvenlik
 
-Rotalar `config/routes.php` dosyasında tanımlanır.
-
-```php
-use App\Core\Router;
-
-// Basit GET isteği
-Router::get('/', 'WelcomeController@index');
-
-// Parametreli ve POST isteği
-Router::post('/users/{id}/update', 'UserController@update');
-
-// Callback fonksiyonu kullanımı
-Router::get('/api/test', function() {
-    return json_encode(['status' => 'ok']);
-});
-```
-
-### 3. Controller
-
-Controller sınıfları `app/Controllers` altında bulunur ve `App\Core\Controller` sınıfını miras almalıdır.
+Rotalarınızı tek bir satırla koruma altına alabilirsiniz:
 
 ```php
-namespace App\Controllers;
-
-use App\Core\Controller;
-use App\Core\Request;
-
-class UserController extends Controller
-{
-    public function show($id)
-    {
-        // Model kullanımı
-        $user = User::find($id);
-        
-        // View döndürme
-        return $this->view('users/profile', [
-            'user' => $user
-        ]);
-    }
-}
-```
-
-### 4. Model (Veritabanı)
-
-Modeller `app/Models` altında bulunur, `App\Core\Model` sınıfını miras alır ve veritabanı tablolarını temsil eder.
-
-```php
-namespace App\Models;
-
-use App\Core\Model;
-
-class User extends Model
-{
-    protected static string $table = 'users';
-    protected static array $fillable = ['name', 'email'];
-    protected static bool $useUuid = true; // UUID aktif
-}
-```
-
-**Kullanım Örnekleri:**
-```php
-// Tüm kullanıcıları getir
-$users = User::all();
-
-// Yeni kullanıcı ekle
-User::create([
-    'name' => 'Ali Veli',
-    'email' => 'ali@example.com'
+Router::get('/admin', 'AdminController@index', [
+    'middleware' => \App\Middleware\AuthMiddleware::class
 ]);
-
-// Id ile bul
-$user = User::find(1);
-
-// Güncelle
-User::update(1, ['name' => 'Ali Can']);
-```
-
-### 5. CLI Aracı
-
-Proje kök dizinindeki `ief` komutu ile sunucuyu başlatabilir veya diğer işlemleri yapabilirsiniz.
-
-```bash
-./ief serve      # Sunucuyu 8000 portunda başlatır
-./ief serve 8080 # Sunucuyu 8080 portunda başlatır
-./ief help       # Yardım menüsü
 ```
 
 ---
 
-## 🤝 Katkıda Bulunma
+## 🏗️ Katkıda Bulunma
 
 1. Fork yapın.
-2. Branch oluşturun (`git checkout -b feature/yeni-ozellik`).
-3. Commit atın (`git commit -m 'Yeni özellik eklendi'`).
-4. Push yapın (`git push origin feature/yeni-ozellik`).
-5. Pull Request açın.
+2. Titan-branch oluşturun (`git checkout -b feature/titan-extension`).
+3. Commit atın (`git commit -m 'Release: v1.2.0 build'`).
+4. Push yapın ve Pull Request açın.
 
 ---
 
-## 🏗️ Örnek Uygulama (Görev Yöneticisi)
-
-Proje içerisinde hazır gelen basit bir Görev Yönetimi (CRUD) uygulaması bulunmaktadır.
-
-1. Veritabanını hazırlayın:
-   ```bash
-   php setup_db.php
-   ```
-2. Uygulamayı başlatın:
-   ```bash
-   ./ief serve
-   ```
-3. Tarayıcıda test edin:
-   `http://localhost:8000/tasks`
-
----
-
-**IEF Framework** &copy; 2024 - Tüm Hakları Saklıdır.
+**IEF Framework** &copy; 2026 - Titan Global Edition.
