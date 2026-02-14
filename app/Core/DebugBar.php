@@ -132,7 +132,7 @@ class DebugBar
             <div class="pulse-header" onclick="let c = document.getElementById('pulse-body'); c.style.display = c.style.display === 'block' ? 'none' : 'block'">
                 <div style="display:flex;align-items:center;gap:15px;">
                     <span style="font-size:18px;filter:drop-shadow(0 0 8px #8B5CF6)">⚡</span>
-                    <span style="font-weight:900;letter-spacing:2px;font-size:12px;">TITAN <span style="color:#06B6D4">PULSE</span> V5</span>
+                    <span style="font-weight:900;letter-spacing:2px;font-size:12px;">TITAN <span style="color:#06B6D4">PULSE</span> V5.1</span>
                 </div>
                 <div class="pulse-stats">
                     <div style="display:flex;flex-direction:column;gap:2px;">
