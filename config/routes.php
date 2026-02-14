@@ -11,16 +11,18 @@ Router::post('/tasks/create', 'TaskController@store');
 Router::post('/tasks/{id}/update', 'TaskController@update');
 Router::post('/tasks/{id}/delete', 'TaskController@delete');
 
-// Auth (Optional for generic framework, but keeping if needed for examples)
-// Router::get('/login', 'AuthController@loginForm');
-// Router::post('/login', 'AuthController@login');
-// Router::get('/logout', 'AuthController@logout');
+// Auth System (Titan Guard)
+Router::get('/login', 'AuthController@showLogin');
+Router::post('/login', 'AuthController@login');
+Router::get('/register', 'AuthController@showRegister');
+Router::post('/register', 'AuthController@register');
+Router::get('/logout', 'AuthController@logout');
 
 // Error Reporting API
 Router::post('/api/report-error', 'ErrorReporterController@report');
 
 // Admin Dashboard
-Router::get('/admin', 'AdminController@index');
+Router::get('/admin', 'AdminController@index', ['middleware' => \App\Middleware\AuthMiddleware::class]);
 
 // Documentation
 Router::get('/docs', function () {
@@ -29,3 +31,17 @@ Router::get('/docs', function () {
 
 // Examples Hub
 Router::get('/examples', 'ExampleController@index');
+
+// Modern Blog
+Router::get('/blog', 'BlogController@index');
+Router::get('/blog/{id}', 'BlogController@show');
+
+// Contact Hub
+Router::get('/contact', 'ContactController@index');
+Router::post('/contact', 'ContactController@submit');
+
+// Language Switch
+Router::get('/lang/{locale}', function ($locale) {
+    \App\Core\Lang::setLocale($locale);
+    back();
+});

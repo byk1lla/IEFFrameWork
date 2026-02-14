@@ -1,94 +1,60 @@
-<!DOCTYPE html>
-<html lang="tr">
+@extends('layouts.app')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-          :root { --bg: #020617; --accent: #00D1FF; --border: rgba(255, 255, 255, 0.08); }
-        }
+@section('content')
+<style>
+    .titan-page-header { margin-bottom: 80px; text-align: left; }
+    .titan-page-header h1 { 
+        font-size: 5rem; font-weight: 900; letter-spacing: -4px; 
+        text-transform: uppercase; margin-bottom: 10px;
+    }
+    .titan-page-header h1 span { color: var(--cyan); text-shadow: 0 0 20px rgba(6, 182, 212, 0.2); }
+    .titan-page-header p { font-size: 1.2rem; color: var(--text-dim); font-weight: 500; }
 
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--bg);
-            color: #fff;
-            line-height: 1.6;
-        }
+    .titan-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px; padding-bottom: 100px; }
+    .ex-card-titan { 
+        background: var(--obsidian); border: 1px solid var(--border); 
+        padding: 60px; border-radius: 4px; transition: all 0.4s; 
+        position: relative; overflow: hidden;
+    }
+    .ex-card-titan:hover { 
+        border-color: var(--cyan); box-shadow: 0 0 30px rgba(6, 182, 212, 0.1); 
+        transform: translateY(-10px); 
+    }
+    
+    .ex-icon-v4 { font-size: 3rem; margin-bottom: 30px; }
+    .ex-card-titan h3 { 
+        font-size: 2rem; font-weight: 900; margin-bottom: 20px; 
+        text-transform: uppercase; letter-spacing: -0.5px;
+    }
+    .ex-card-titan p { color: var(--text-dim); font-size: 1.1rem; line-height: 1.8; margin-bottom: 35px; }
+    
+    .ex-link-v4 { 
+        display: inline-block; padding: 15px 35px; border-radius: 4px; 
+        background: rgba(6, 182, 212, 0.05); border: 1px solid var(--border); 
+        color: #fff; text-decoration: none; font-weight: 800; 
+        text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem;
+        transition: all 0.3s;
+    }
+    .ex-card-titan:hover .ex-link-v4 { background: var(--cyan); color: #000; border-color: var(--cyan); }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 100px 20px;
-        }
+    @media (max-width: 900px) {
+        .titan-grid { grid-template-columns: 1fr; }
+    }
+</style>
 
-        h1 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 3rem;
-            text-align: center;
-        }
+<div class="titan-page-header">
+    <h1>The <span>{{ trans('ecosystem') }}</span></h1>
+    <p>Titanium grade templates for the modern elite developer.</p>
+</div>
 
-        .examples-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-        }
-
-        .example-card {
-            background: rgba(17, 24, 39, 0.7);
-            border: 1px solid var(--border);
-            border-radius: 32px;
-            padding: 3rem;
-            transition: all 0.4s;
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .example-card:hover {
-            transform: translateY(-10px);
-            border-color: var(--accent);
-            background: rgba(99, 102, 241, 0.05);
-        }
-
-        .card-icon {
-            font-size: 3rem;
-            margin-bottom: 2rem;
-            display: block;
-        }
-
-        .card-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .card-desc {
-            color: #9ca3af;
-            font-size: 1.1rem;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="container">
-        <a href="/"
-            style="color:var(--accent); text-decoration:none; display:inline-block; margin-bottom:3rem; font-weight:600;">←
-            Ana Sayfaya Dön</a>
-        <h1>Örnek <span style="color:var(--accent)">Uygulamalar</span></h1>
-
-        <div class="examples-grid">
-            @foreach($examples as $ex)
-            <a href="{{ $ex['url'] }}" class="example-card">
-                <span class="card-icon">{{ $ex['icon'] }}</span>
-                <div class="card-title">{{ $ex['name'] }}</div>
-                <div class="card-desc">{{ $ex['desc'] }}</div>
-            </a>
-            @endforeach
-        </div>
+<div class="titan-grid">
+    @foreach($examples as $ex)
+    <div class="ex-card-titan">
+        <div class="ex-icon-v4">{{ $ex['icon'] ?? '⚡' }}</div>
+        <h3>{{ $ex['title'] ?? '' }}</h3>
+        <p>{{ $ex['description'] ?? '' }}</p>
+        <a href="{{ $ex['url'] ?? '#' }}" class="ex-link-v4">Initalize Module →</a>
     </div>
-</body>
-
-</html>
+    @endforeach
+</div>
+@endsection

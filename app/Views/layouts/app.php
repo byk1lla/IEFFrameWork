@@ -1,366 +1,182 @@
 <!DOCTYPE html>
-<html lang="tr" class="dark">
+<html lang="{{ \App\Core\Lang::getLocale() }}">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#3b82f6">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-    <title>
-        <?= $title ?? 'E-Fatura Pro' ?>
-    </title>
-
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json">
-    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
-
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ $title ?? 'IEF V4 | Titanium Obsidian' }}</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
         rel="stylesheet">
-
-    <!-- TailwindCSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Poppins', 'system-ui', 'sans-serif'],
-                    },
-                    colors: {
-                        primary: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            200: '#bfdbfe',
-                            300: '#93c5fd',
-                            400: '#60a5fa',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                            800: '#1e40af',
-                            900: '#1e3a8a',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-    <!-- HTMX -->
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <!-- ApexCharts -->
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-
-    <!-- DataTables -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.tailwindcss.min.css">
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-
     <style>
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+        :root {
+            --bg: #050505;
+            --obsidian: #0a0a0a;
+            --purple: #8B5CF6;
+            --cyan: #06B6D4;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: rgba(139, 92, 246, 0.15);
+            --glow: 0 0 20px rgba(139, 92, 246, 0.2);
         }
 
-        ::-webkit-scrollbar-track {
-            background: #1e293b;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        ::-webkit-scrollbar-thumb {
-            background: #3b82f6;
-            border-radius: 3px;
-        }
-
-        /* Mobile-first base styles */
         body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            min-height: 100vh;
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(6, 182, 212, 0.05) 0%, transparent 40%);
         }
 
-        /* Glass effect */
-        .glass {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
+        .titan-nav {
+            height: 90px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: blur(20px);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .nav-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            height: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 60px;
+        }
+
+        .titan-logo {
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            text-decoration: none;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        .titan-logo span {
+            color: var(--purple);
+            text-shadow: var(--glow);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-dim);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--purple);
+            text-shadow: var(--glow);
+        }
+
+        .btn-v4 {
+            background: linear-gradient(135deg, var(--purple), #7c3aed);
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 4px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            box-shadow: var(--glow);
+            transition: all 0.3s;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* HTMX loading indicator */
-        .htmx-request .htmx-indicator {
-            display: inline-flex;
+        .btn-v4:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
         }
 
-        .htmx-indicator {
-            display: none;
+        .app-stage {
+            padding-top: 150px;
+            min-height: 80vh;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-left: 60px;
+            padding-right: 60px;
         }
 
-        /* Mobile menu animation */
-        .mobile-menu {
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
+        footer {
+            padding: 80px 0;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
 
-        .mobile-menu.open {
-            transform: translateX(0);
+        /* Lang Switcher */
+        .lang-titan {
+            display: flex;
+            gap: 15px;
+            margin-right: 20px;
         }
 
-        /* Card hover effect */
-        .card-hover {
-            transition: all 0.3s ease;
+        .lang-titan a {
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: var(--text-dim);
+            text-decoration: none;
         }
 
-        .card-hover:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 40px rgba(59, 130, 246, 0.2);
-        }
-
-        /* PWA Safe area */
-        .safe-top {
-            padding-top: env(safe-area-inset-top);
-        }
-
-        .safe-bottom {
-            padding-bottom: env(safe-area-inset-bottom);
+        .lang-titan a.active {
+            color: var(--cyan);
+            text-shadow: 0 0 10px var(--cyan);
         }
     </style>
 </head>
 
-<body class="text-gray-100 antialiased">
-    <!-- Header (Mobile + Desktop) -->
-    <header class="fixed top-0 left-0 right-0 lg:left-72 z-40 glass safe-top transition-all duration-300">
-        <div class="flex items-center justify-between px-4 py-3 h-16">
-            <button id="menuToggle" class="text-2xl lg:hidden">
-                <i class="fas fa-bars"></i>
-            </button>
-            <h1 class="text-lg font-semibold text-primary-400 lg:hidden">
-                <i class="fas fa-file-invoice"></i> E-Fatura Pro
-            </h1>
-            <!-- Desktop Title -->
-            <div class="hidden lg:block ml-4">
-                <h2 class="text-xl font-semibold text-white/90">
-                    <?= isset($title) ? str_replace(' - E-Fatura Pro', '', $title) : 'Dashboard' ?>
-                </h2>
-            </div>
-
-            <!-- Right Side Actions -->
-            <div class="flex items-center gap-3">
-                <!-- Notification Removed as per request -->
-
-                <!-- Mobile Profile/Logout could go here if needed, but sidebar has it. -->
-            </div>
-        </div>
-    </header>
-
-    <?php
-    $current_uri = $_SERVER['REQUEST_URI'] ?? '/';
-    $is_active = function ($path) use ($current_uri) {
-        if ($path === '/' && $current_uri === '/')
-            return true;
-        if ($path !== '/' && strpos($current_uri, $path) === 0)
-            return true;
-        return false;
-    };
-
-    $active_class = 'bg-primary-500/20 text-primary-400 font-medium';
-    $inactive_class = 'hover:bg-white/5 opacity-70 hover:opacity-100 transition';
-    ?>
-
-    <!-- Sidebar -->
-    <aside id="sidebar" class="mobile-menu lg:translate-x-0 fixed top-0 left-0 h-full w-72 glass z-50 safe-top">
-        <div class="p-6">
-            <!-- Logo -->
-            <div class="flex items-center gap-3 mb-8">
-                <div
-                    class="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-file-invoice-dollar text-2xl"></i>
+<body>
+    <nav class="titan-nav">
+        <div class="nav-inner">
+            <a href="/" class="titan-logo">Titan<span>V4</span></a>
+            <div class="nav-links">
+                <div class="lang-titan">
+                    <a href="/lang/tr" class="{{ \App\Core\Lang::getLocale() === 'tr' ? 'active' : '' }}">TR</a>
+                    <a href="/lang/en" class="{{ \App\Core\Lang::getLocale() === 'en' ? 'active' : '' }}">EN</a>
                 </div>
-                <div>
-                    <h1 class="text-xl font-bold">E-Fatura Pro</h1>
-                    <p class="text-xs text-gray-400">v2.0 MVC</p>
-                </div>
+                <a href="/blog">{{ trans('experience') }}</a>
+                <a href="/docs">{{ trans('knowledge') }}</a>
+                <a href="/examples">{{ trans('ecosystem') }}</a>
+                <a href="/admin" class="btn-v4">{{ trans('control_center') }}</a>
             </div>
-
-            <!-- Navigation -->
-            <nav class="space-y-2">
-                <a href="/"
-                    class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/') && $current_uri == '/' ? $active_class : $inactive_class ?>">
-                    <i class="fas fa-home w-5"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="/mukellef"
-                    class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/mukellef') ? $active_class : $inactive_class ?>">
-                    <i class="fas fa-search w-5"></i>
-                    <span>Sorgula</span>
-                </a>
-                <a href="/fatura"
-                    class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/fatura') && $current_uri != '/fatura/yeni' ? $active_class : $inactive_class ?>">
-                    <i class="fas fa-file-invoice w-5"></i>
-                    <span>Faturalar</span>
-                </a>
-                <a href="/fatura/yeni"
-                    class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/fatura/yeni') ? $active_class : $inactive_class ?>">
-                    <i class="fas fa-plus-circle w-5"></i>
-                    <span>Yeni Fatura</span>
-                </a>
-                <a href="/cari"
-                    class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/cari') ? $active_class : $inactive_class ?>">
-                    <i class="fas fa-users w-5"></i>
-                    <span>Müşteriler</span>
-                </a>
-                <a href="/hizmetler"
-                    class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/hizmetler') ? $active_class : $inactive_class ?>">
-                    <i class="fas fa-box w-5"></i>
-                    <span>Hizmetler</span>
-                </a>
-                <a href="/raporlar"
-                    class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/raporlar') ? $active_class : $inactive_class ?>">
-                    <i class="fas fa-chart-pie w-5"></i>
-                    <span>Raporlar</span>
-                </a>
-
-                <div class="border-t border-white/10 my-4"></div>
-
-                <a href="/ayarlar"
-                    class="flex items-center gap-3 px-4 py-3 rounded-xl <?= $is_active('/ayarlar') ? $active_class : $inactive_class ?>">
-                    <i class="fas fa-cog w-5"></i>
-                    <span>Ayarlar</span>
-                </a>
-            </nav>
-        </div>
-
-        <!-- User Profile -->
-        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10 safe-bottom">
-            <?php
-            $user = \App\Core\Session::get('user');
-            $is_edm = !($user['is_local'] ?? true);
-            $initials = '';
-            if (!empty($user['name'])) {
-                $parts = explode(' ', $user['name']);
-                foreach ($parts as $p)
-                    $initials .= mb_substr($p, 0, 1);
-            }
-            $initials = mb_strtoupper($initials);
-            ?>
-            <div class="flex items-center gap-3">
-                <?php if ($is_edm): ?>
-                    <div
-                        class="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1 shadow-lg shadow-white/20 overflow-hidden border border-white/20">
-                        <img src="/edm-logo.png?v=2" alt="EDM" class="w-full h-full object-contain">
-                    </div>
-                <?php else: ?>
-                    <div
-                        class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center font-bold text-sm">
-                        <?= $initials ?: '?' ?>
-                    </div>
-                <?php endif; ?>
-
-                <div class="flex-1">
-                    <p class="font-medium text-sm truncate"><?= htmlspecialchars($user['name'] ?? 'Misafir') ?></p>
-                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-                        <?= $is_edm ? 'EDM BİLİŞİM' : 'SİSTEM ADMİN' ?>
-                    </p>
-                </div>
-                <a href="/logout" class="text-gray-400 hover:text-red-400 transition ml-1" title="Çıkış Yap">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
-            </div>
-        </div>
-    </aside>
-
-    <!-- Overlay for mobile -->
-    <div id="overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onclick="toggleMenu()"></div>
-
-    <!-- Main Content -->
-    <main class="lg:ml-72 min-h-screen pt-16">
-        <div class="p-4 lg:p-8">
-            <?= $content ?? '' ?>
-        </div>
-    </main>
-
-    <!-- Bottom Navigation (Mobile) -->
-    <nav class="lg:hidden fixed bottom-0 left-0 right-0 glass safe-bottom z-40">
-        <div class="flex justify-around py-3">
-            <a href="/"
-                class="flex flex-col items-center <?= $is_active('/') && $current_uri == '/' ? 'text-primary-400 scale-110' : 'text-gray-400 hover:text-primary-400' ?> transition">
-                <i class="fas fa-home text-xl"></i>
-                <span class="text-xs mt-1">Ana Sayfa</span>
-            </a>
-            <a href="/fatura"
-                class="flex flex-col items-center <?= $is_active('/fatura') && $current_uri != '/fatura/yeni' ? 'text-primary-400 scale-110' : 'text-gray-400 hover:text-primary-400' ?> transition">
-                <i class="fas fa-file-invoice text-xl"></i>
-                <span class="text-xs mt-1">Faturalar</span>
-            </a>
-            <a href="/fatura/yeni" class="flex flex-col items-center">
-                <div
-                    class="w-14 h-14 -mt-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center shadow-lg shadow-primary-500/50 hover:scale-105 transition">
-                    <i class="fas fa-plus text-2xl"></i>
-                </div>
-            </a>
-            <a href="/cari"
-                class="flex flex-col items-center <?= $is_active('/cari') ? 'text-primary-400 scale-110' : 'text-gray-400 hover:text-primary-400' ?> transition">
-                <i class="fas fa-users text-xl"></i>
-                <span class="text-xs mt-1">Müşteriler</span>
-            </a>
-            <a href="/ayarlar"
-                class="flex flex-col items-center <?= $is_active('/ayarlar') ? 'text-primary-400 scale-110' : 'text-gray-400 hover:text-primary-400' ?> transition">
-                <i class="fas fa-cog text-xl"></i>
-                <span class="text-xs mt-1">Ayarlar</span>
-            </a>
         </div>
     </nav>
 
-    <script>
-        // Service Worker Registration
-        /*
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js')
-                .then(reg => console.log('SW registered'))
-                .catch(err => console.log('SW failed', err));
-        }
-        */
+    <main class="app-stage">
+        @yield('content')
+    </main>
 
-        // Mobile Menu Toggle
-        function toggleMenu() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('overlay');
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('hidden');
-        }
-
-        document.getElementById('menuToggle')?.addEventListener('click', toggleMenu);
-
-        // HTMX Extensions
-        document.body.addEventListener('htmx:afterSwap', function (evt) {
-            // Re-init any JS after HTMX swap
-        });
-
-        // SweetAlert Toast shortcut
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-        });
-
-        // Dark mode toggle (if needed)
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-        }
-    </script>
+    <footer>
+        IEF Framework V4 • Titanium Obsidian • 2026
+    </footer>
 </body>
 
 </html>

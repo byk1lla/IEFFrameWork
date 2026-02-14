@@ -12,6 +12,7 @@
 // Error Reporting
 error_reporting(E_ALL);
 ini_set('display_errors', '1'); // Set to 0 in production
+echo "<!-- V5_CORE_BOOTED -->";
 
 // Timezone
 date_default_timezone_set('Europe/Istanbul');
