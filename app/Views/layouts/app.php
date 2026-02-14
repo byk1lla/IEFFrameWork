@@ -174,7 +174,7 @@
     </main>
 
     <footer>
-        IEF Framework V5.1 • Titanium Obsidian • 2026
+        IEF Framework V5.2 (1.2.0) • Titanium Obsidian • 2026
     </footer>
 </body>
 
