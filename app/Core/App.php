@@ -1,23 +1,25 @@
 <?php
 /**
- * Ana Uygulama Sınıfı
- * 
- * @package    IEF Framework
+ * App — Framework bootstrap.
+ *
+ * Sırasıyla: config yükle → bakım kontrolü → session → lang → route → dispatch.
+ *
+ * @package IEF Framework
  */
+
+declare(strict_types=1);
 
 namespace App\Core;
 
 class App
 {
     protected static ?App $instance = null;
-    protected array $config = [];
-    protected ?Database $db = null;
 
     public function __construct()
     {
         self::$instance = $this;
-        $this->loadConfig();
-        DebugBar::getInstance(); // Start timer
+        Config::load();
+        DebugBar::getInstance(); // Debug bar başlat
     }
 
     public static function getInstance(): ?App
@@ -25,45 +27,75 @@ class App
         return self::$instance;
     }
 
-    protected function loadConfig(): void
-    {
-        $this->config['app'] = require CONFIG_PATH . '/app.php';
-        Config::load();
-    }
-
     public function run(): void
     {
-        // Bakım modu kontrolü
-        if ($this->config['app']['maintenance']['enabled'] ?? false) {
-            $allowedIps = $this->config['app']['maintenance']['allowed_ips'] ?? [];
-            if (!in_array($_SERVER['REMOTE_ADDR'], $allowedIps)) {
-                http_response_code(503);
-                echo $this->config['app']['maintenance']['message'];
-                exit;
-            }
+        // ─── Session + Dil ──────────────────────────────────────────
+        Session::start();
+        Lang::load();
+
+        // ─── Bakım modu ─────────────────────────────────────────────
+        if ($this->isUnderMaintenance()) {
+            $this->serveMaintenancePage();
+            return;
         }
 
-        // Session başlat
-        Session::start();
-
-        // Dil yükle
-        \App\Core\Lang::load();
-
-        // Router çalıştır
+        // ─── Router ─────────────────────────────────────────────────
         require CONFIG_PATH . '/routes.php';
         Router::dispatch();
     }
 
-    public function getConfig(string $key, $default = null)
+    /**
+     * Bakım modu aktif mi? Admin login olanlar ve admin/login path'leri hariç.
+     */
+    protected function isUnderMaintenance(): bool
     {
-        return $this->config['app'][$key] ?? $default;
+        // Admin paneli ve auth route'ları her zaman erişilebilir (yoksa adminçıkamaz)
+        $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+        if (str_starts_with($path, '/admin')) return false;
+        if (str_starts_with($path, '/docs')) return false;
+        if (in_array($path, ['/login', '/logout', '/sifre-sifirla'], true)) return false;
+        if (str_starts_with($path, '/sifre-sifirla/')) return false;
+
+        // Admin login olmuşsa bypass (siteyi normal görür)
+        try {
+            if (SiteContent::isAdminLoggedIn()) return false;
+        } catch (\Throwable $e) { /* ignore */ }
+
+        // Önce Setting (admin paneli), sonra config fallback
+        try {
+            $on = \App\Models\Setting::get('general.maintenance');
+            if ($on !== null && $on !== '') return (bool) $on;
+        } catch (\Throwable $e) { /* tablo yoksa atla */ }
+
+        return (bool) Config::get('app.maintenance.enabled', false);
     }
 
-    public function getDatabase(): Database
+    protected function serveMaintenancePage(): void
     {
-        if ($this->db === null) {
-            $this->db = Database::getInstance();
+        http_response_code(503);
+        header('Retry-After: 3600');
+        header('Content-Type: text/html; charset=utf-8');
+
+        // Site adı + iletişim — Setting'ten
+        $siteName = 'Site';
+        $contactEmail = $contactPhone = $waNumber = '';
+        $eta = $message = '';
+        try {
+            $general = \App\Models\Setting::group('general');
+            $siteName     = $general['site_name']       ?? Config::get('app.name', 'Site');
+            $contactEmail = $general['contact_email']   ?? '';
+            $contactPhone = $general['contact_phone']   ?? '';
+            $waNumber     = $general['whatsapp_number'] ?? '';
+            $eta          = $general['maintenance_eta'] ?? '';
+            $message      = $general['maintenance_message'] ?? '';
+        } catch (\Throwable $e) { /* ignore */ }
+
+        $view = APP_PATH . '/Views/errors/maintenance.php';
+        if (file_exists($view)) {
+            // değişkenler view'da kullanılabilir
+            include $view;
+        } else {
+            echo '<h1>Sistem bakımda</h1>';
         }
-        return $this->db;
     }
 }

@@ -1,8 +1,39 @@
 /vendor
+/node_modules
+
+# Veritabanı dosyaları (SQLite)
 /storage/*.sqlite
+/storage/*.sqlite3
+*.sqlite
+*.sqlite3
+*.db
+
+# Storage runtime
 /storage/logs/*
 /storage/cache/*
+/storage/sessions/*
+!/storage/sessions/.gitkeep
+/sessions
+
+# Hassas config — repo'da .example template'i kalır
+config/database.php
+config/services.php
+
+# Editör/IDE
 .env
 .idea
+.vscode
 .DS_Store
+
+# Test / geçici
 /test/*
+composer.phar
+*.bak
+*.log
+
+# Public uploads (kullanıcı içeriği — production'da sunucuda kalır)
+/public/uploads/*
+!/public/uploads/.gitkeep
+/public/assets/img/content/*
+!/public/assets/img/content/.gitkeep
+cred

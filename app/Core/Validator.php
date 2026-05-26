@@ -1,43 +1,59 @@
 <?php
 /**
- * Validasyon Sınıfı
- * 
- * @package    IEF Framework
+ * Validator — kural tabanlı form/input doğrulama.
+ *
+ * Kullanım:
+ *   $v = Validator::make($data, [
+ *       'email'    => 'required|email|max:191',
+ *       'password' => 'required|min:8|confirmed',
+ *       'role'     => 'in:admin,user',
+ *   ]);
+ *   if ($v->fails()) { ... $v->errors() ... }
+ *
+ * Custom rule eklemek için extend ile yeni validate<Name>() method'u tanımla.
+ *
+ * @package IEF Framework
  */
+
+declare(strict_types=1);
 
 namespace App\Core;
 
 class Validator
 {
-    protected array $data = [];
-    protected array $rules = [];
+    protected array $data;
+    protected array $rules;
+    protected array $customMessages;
     protected array $errors = [];
-    protected array $customMessages = [];
 
     protected array $defaultMessages = [
-        'required' => ':field alanı zorunludur.',
-        'email' => ':field geçerli bir e-posta adresi olmalıdır.',
-        'min' => ':field en az :param karakter olmalıdır.',
-        'max' => ':field en fazla :param karakter olmalıdır.',
-        'numeric' => ':field sayısal bir değer olmalıdır.',
-        'integer' => ':field tam sayı olmalıdır.',
-        'string' => ':field metin olmalıdır.',
-        'array' => ':field dizi olmalıdır.',
-        'date' => ':field geçerli bir tarih olmalıdır.',
-        'unique' => ':field zaten kullanılıyor.',
-        'exists' => ':field geçerli değil.',
+        'required'  => ':field alanı zorunludur.',
+        'email'     => ':field geçerli bir e-posta adresi olmalıdır.',
+        'min'       => ':field en az :param karakter olmalıdır.',
+        'max'       => ':field en fazla :param karakter olmalıdır.',
+        'numeric'   => ':field sayısal bir değer olmalıdır.',
+        'integer'   => ':field tam sayı olmalıdır.',
+        'string'    => ':field metin olmalıdır.',
+        'array'     => ':field dizi olmalıdır.',
+        'boolean'   => ':field doğru/yanlış olmalıdır.',
+        'date'      => ':field geçerli bir tarih olmalıdır.',
+        'unique'    => ':field zaten kullanılıyor.',
+        'exists'    => ':field geçerli değil.',
         'confirmed' => ':field onayı eşleşmiyor.',
-        'regex' => ':field formatı geçersiz.',
-        'in' => ':field seçilen değer geçersiz.',
-        'phone' => ':field geçerli bir telefon numarası olmalıdır.',
-        'url' => ':field geçerli bir URL olmalıdır.',
-        'between' => ':field :min ile :max arasında olmalıdır.',
+        'regex'     => ':field formatı geçersiz.',
+        'in'        => ':field seçilen değer geçersiz.',
+        'phone'     => ':field geçerli bir telefon numarası olmalıdır.',
+        'url'       => ':field geçerli bir URL olmalıdır.',
+        'between'   => ':field :min ile :max arasında olmalıdır.',
+        'same'      => ':field değeri eşleşmiyor.',
+        'alpha'     => ':field sadece harf içermelidir.',
+        'alphanum'  => ':field sadece harf ve rakam içermelidir.',
     ];
 
     public function __construct(array $data, array $rules, array $messages = [])
     {
-        $this->data = $data;
-        $this->rules = $rules;
+        $this->data           = $data;
+        $this->rules          = $rules;
         $this->customMessages = $messages;
     }
 
@@ -51,237 +67,193 @@ class Validator
         $this->errors = [];
 
         foreach ($this->rules as $field => $rules) {
-            $rulesArray = is_string($rules) ? explode('|', $rules) : $rules;
-            $value = $this->getValue($field);
-
-            foreach ($rulesArray as $rule) {
+            $ruleSet = is_string($rules) ? explode('|', $rules) : (array) $rules;
+            $value   = $this->getValue($field);
+            foreach ($ruleSet as $rule) {
+                $rule = trim($rule);
+                if ($rule === '') continue;
                 $this->applyRule($field, $value, $rule);
             }
         }
-
         return empty($this->errors);
     }
 
-    public function fails(): bool
-    {
-        return !$this->validate();
-    }
+    public function fails(): bool  { return !$this->validate(); }
+    public function passes(): bool { return $this->validate(); }
 
-    public function passes(): bool
-    {
-        return $this->validate();
-    }
-
-    public function errors(): array
-    {
-        return $this->errors;
-    }
-
-    public function firstError(string $field): ?string
-    {
-        return $this->errors[$field][0] ?? null;
-    }
+    public function errors(): array     { return $this->errors; }
+    public function firstError(string $f): ?string { return $this->errors[$f][0] ?? null; }
 
     public function allErrors(): array
     {
         $all = [];
-        foreach ($this->errors as $fieldErrors) {
-            $all = array_merge($all, $fieldErrors);
+        foreach ($this->errors as $list) {
+            foreach ($list as $msg) $all[] = $msg;
         }
         return $all;
     }
 
-    protected function getValue(string $field)
+    /** Validate edilmiş + rules'da olan key'lerin değerlerini döndür. */
+    public function validated(): array
     {
-        $keys = explode('.', $field);
+        if ($this->errors) return [];
+        return array_intersect_key($this->data, $this->rules);
+    }
+
+    // ─── Internal ──────────────────────────────────────────────────
+    protected function getValue(string $field): mixed
+    {
         $value = $this->data;
-
-        foreach ($keys as $key) {
-            if (!isset($value[$key])) return null;
-            $value = $value[$key];
+        foreach (explode('.', $field) as $seg) {
+            if (!is_array($value) || !array_key_exists($seg, $value)) return null;
+            $value = $value[$seg];
         }
-
         return $value;
     }
 
-    protected function applyRule(string $field, $value, string $rule): void
+    protected function applyRule(string $field, mixed $value, string $rule): void
     {
-        $parts = explode(':', $rule);
-        $ruleName = $parts[0];
-        
-        if (empty($ruleName)) {
-            return;
-        }
+        [$name, $rest] = array_pad(explode(':', $rule, 2), 2, null);
+        $params = $rest !== null ? array_map('trim', explode(',', $rest)) : [];
 
-        $params = isset($parts[1]) ? explode(',', $parts[1]) : [];
+        $method = 'validate' . ucfirst($name);
+        if (!method_exists($this, $method)) return;
 
-        $method = 'validate' . ucfirst($ruleName);
-        
-        if (method_exists($this, $method)) {
-            if (!$this->$method($value, $params, $field)) {
-                $this->addError($field, $ruleName, $params);
-            }
+        if (!$this->$method($value, $params, $field)) {
+            $this->addError($field, $name, $params);
         }
     }
 
     protected function addError(string $field, string $rule, array $params = []): void
     {
-        $message = $this->customMessages["{$field}.{$rule}"] 
-            ?? $this->customMessages[$field] 
-            ?? $this->defaultMessages[$rule] 
-            ?? 'Geçersiz değer.';
+        $msg = $this->customMessages["$field.$rule"]
+            ?? $this->customMessages[$field]
+            ?? $this->defaultMessages[$rule]
+            ?? "$field geçersiz.";
 
-        $message = str_replace(':field', $field, $message);
-        $message = str_replace(':param', $params[0] ?? '', $message);
-        $message = str_replace(':min', $params[0] ?? '', $message);
-        $message = str_replace(':max', $params[1] ?? $params[0] ?? '', $message);
-
-        $this->errors[$field][] = $message;
+        $msg = strtr($msg, [
+            ':field' => $field,
+            ':param' => $params[0] ?? '',
+            ':min'   => $params[0] ?? '',
+            ':max'   => $params[1] ?? ($params[0] ?? ''),
+        ]);
+        $this->errors[$field][] = $msg;
     }
 
-    // Validation Rules
-    protected function validateRequired($value): bool
+    // ─── Rules ─────────────────────────────────────────────────────
+    protected function validateRequired(mixed $v): bool
     {
-        if (is_null($value)) return false;
-        if (is_string($value) && trim($value) === '') return false;
-        if (is_array($value) && count($value) === 0) return false;
+        if (is_null($v)) return false;
+        if (is_string($v) && trim($v) === '') return false;
+        if (is_array($v) && count($v) === 0) return false;
         return true;
     }
 
-    protected function validateEmail($value): bool
+    protected function validateEmail(mixed $v): bool
     {
-        if (empty($value)) return true;
-        return filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
+        if ($v === null || $v === '') return true;
+        return filter_var($v, FILTER_VALIDATE_EMAIL) !== false;
     }
 
-    protected function validateMin($value, array $params): bool
+    protected function validateMin(mixed $v, array $p): bool
     {
-        if (empty($value)) return true;
-        $min = (int) ($params[0] ?? 0);
-        
-        // Array için count kontrolü yap
-        if (is_array($value)) {
-            return count($value) >= $min;
-        }
-        
-        return mb_strlen((string) $value) >= $min;
+        if ($v === null || $v === '') return true;
+        $min = (int) ($p[0] ?? 0);
+        if (is_array($v)) return count($v) >= $min;
+        // min/max her zaman karakter uzunluğu ölçer; sayısal karşılaştırma için gte/lte kullan.
+        return mb_strlen((string) $v) >= $min;
     }
 
-    protected function validateMax($value, array $params): bool
+    protected function validateMax(mixed $v, array $p): bool
     {
-        if (empty($value)) return true;
-        $max = (int) ($params[0] ?? PHP_INT_MAX);
-        
-        // Array için count kontrolü yap
-        if (is_array($value)) {
-            return count($value) <= $max;
-        }
-        
-        return mb_strlen((string) $value) <= $max;
+        if ($v === null || $v === '') return true;
+        $max = (int) ($p[0] ?? PHP_INT_MAX);
+        if (is_array($v)) return count($v) <= $max;
+        return mb_strlen((string) $v) <= $max;
     }
 
-    protected function validateNumeric($value): bool
+    protected function validateGte(mixed $v, array $p): bool
     {
-        if (empty($value)) return true;
-        return is_numeric($value);
+        if ($v === null || $v === '') return true;
+        return is_numeric($v) && (float) $v >= (float) ($p[0] ?? 0);
     }
 
-    protected function validateInteger($value): bool
+    protected function validateLte(mixed $v, array $p): bool
     {
-        if (empty($value)) return true;
-        return filter_var($value, FILTER_VALIDATE_INT) !== false;
+        if ($v === null || $v === '') return true;
+        return is_numeric($v) && (float) $v <= (float) ($p[0] ?? PHP_INT_MAX);
     }
 
-    protected function validateString($value): bool
+    protected function validateNumeric(mixed $v): bool   { return $v === null || $v === '' || is_numeric($v); }
+    protected function validateInteger(mixed $v): bool   { return $v === null || $v === '' || filter_var($v, FILTER_VALIDATE_INT) !== false; }
+    protected function validateString(mixed $v): bool    { return $v === null || is_string($v); }
+    protected function validateArray(mixed $v): bool     { return $v === null || is_array($v); }
+    protected function validateBoolean(mixed $v): bool   { return $v === null || in_array($v, [true,false,0,1,'0','1','true','false'], true); }
+    protected function validateDate(mixed $v): bool      { return $v === null || $v === '' || strtotime((string) $v) !== false; }
+    protected function validateUrl(mixed $v): bool       { return $v === null || $v === '' || filter_var($v, FILTER_VALIDATE_URL) !== false; }
+    protected function validateAlpha(mixed $v): bool     { return $v === null || $v === '' || preg_match('/^[\p{L}]+$/u', (string) $v) === 1; }
+    protected function validateAlphanum(mixed $v): bool  { return $v === null || $v === '' || preg_match('/^[\p{L}\p{N}]+$/u', (string) $v) === 1; }
+
+    protected function validateConfirmed(mixed $v, array $p, string $field): bool
     {
-        if (is_null($value)) return true;
-        return is_string($value);
+        unset($p);
+        return $v === $this->getValue($field . '_confirmation');
     }
 
-    protected function validateArray($value): bool
+    protected function validateSame(mixed $v, array $p): bool
     {
-        if (is_null($value)) return true;
-        return is_array($value);
+        return $v === $this->getValue((string) ($p[0] ?? ''));
     }
 
-    protected function validateDate($value): bool
+    protected function validateRegex(mixed $v, array $p): bool
     {
-        if (empty($value)) return true;
-        return strtotime($value) !== false;
+        return $v === null || $v === '' || preg_match((string) ($p[0] ?? '/.*/'), (string) $v) === 1;
     }
 
-    protected function validateConfirmed($value, array $params, string $field): bool
+    protected function validateIn(mixed $v, array $p): bool
     {
-        $confirmValue = $this->getValue($field . '_confirmation');
-        return $value === $confirmValue;
+        return $v === null || $v === '' || in_array((string) $v, $p, true);
     }
 
-    protected function validateRegex($value, array $params): bool
+    protected function validatePhone(mixed $v): bool
     {
-        if (empty($value)) return true;
-        return preg_match($params[0] ?? '/.*/', $value) === 1;
+        if ($v === null || $v === '') return true;
+        $c = preg_replace('/[^0-9]/', '', (string) $v);
+        return strlen($c) >= 10 && strlen($c) <= 15;
     }
 
-    protected function validateIn($value, array $params): bool
+    protected function validateBetween(mixed $v, array $p): bool
     {
-        if (empty($value)) return true;
-        return in_array($value, $params);
+        if ($v === null || $v === '') return true;
+        $min = (int) ($p[0] ?? 0);
+        $max = (int) ($p[1] ?? PHP_INT_MAX);
+        $len = is_numeric($v) ? (float) $v : mb_strlen((string) $v);
+        return $len >= $min && $len <= $max;
     }
 
-    protected function validatePhone($value): bool
+    protected function validateUnique(mixed $v, array $p, string $field): bool
     {
-        if (empty($value)) return true;
-        $cleaned = preg_replace('/[^0-9]/', '', $value);
-        return strlen($cleaned) >= 10 && strlen($cleaned) <= 15;
+        if ($v === null || $v === '') return true;
+        $table    = $p[0] ?? '';
+        $column   = $p[1] ?? $field;
+        $exceptId = $p[2] ?? null;
+        if (!$table) return true;
+
+        $sql  = "SELECT COUNT(*) c FROM `$table` WHERE `$column` = ?";
+        $args = [$v];
+        if ($exceptId !== null) { $sql .= " AND id != ?"; $args[] = $exceptId; }
+
+        $row = Database::getInstance()->fetch($sql, $args);
+        return ((int) ($row['c'] ?? 0)) === 0;
     }
 
-    protected function validateUrl($value): bool
+    protected function validateExists(mixed $v, array $p): bool
     {
-        if (empty($value)) return true;
-        return filter_var($value, FILTER_VALIDATE_URL) !== false;
-    }
-
-    protected function validateBetween($value, array $params): bool
-    {
-        if (empty($value)) return true;
-        $min = (int) ($params[0] ?? 0);
-        $max = (int) ($params[1] ?? PHP_INT_MAX);
-        $length = mb_strlen((string) $value);
-        return $length >= $min && $length <= $max;
-    }
-
-    protected function validateUnique($value, array $params, string $field): bool
-    {
-        if (empty($value)) return true;
-        
-        $table = $params[0] ?? '';
-        $column = $params[1] ?? $field;
-        $exceptId = $params[2] ?? null;
-
-        $db = Database::getInstance();
-        $sql = "SELECT COUNT(*) as count FROM {$table} WHERE {$column} = ?";
-        $bindings = [$value];
-
-        if ($exceptId) {
-            $sql .= " AND id != ?";
-            $bindings[] = $exceptId;
-        }
-
-        $result = $db->fetch($sql, $bindings);
-        return (int) $result['count'] === 0;
-    }
-
-    protected function validateExists($value, array $params): bool
-    {
-        if (empty($value)) return true;
-
-        $table = $params[0] ?? '';
-        $column = $params[1] ?? 'id';
-
-        $db = Database::getInstance();
-        $sql = "SELECT COUNT(*) as count FROM {$table} WHERE {$column} = ?";
-        $result = $db->fetch($sql, [$value]);
-        
-        return (int) $result['count'] > 0;
+        if ($v === null || $v === '') return true;
+        $table  = $p[0] ?? '';
+        $column = $p[1] ?? 'id';
+        if (!$table) return false;
+        $row = Database::getInstance()->fetch("SELECT COUNT(*) c FROM `$table` WHERE `$column` = ?", [$v]);
+        return ((int) ($row['c'] ?? 0)) > 0;
     }
 }

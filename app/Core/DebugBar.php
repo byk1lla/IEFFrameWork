@@ -1,163 +1,115 @@
 <?php
+/**
+ * Debug Bar — gerçek zamanlı geliştirici çubuğu (SQL, latency, memory).
+ *
+ * Sadece debug=true ve HTML response'larda enjekte edilir.
+ *
+ * @package IEF Framework
+ */
+
+declare(strict_types=1);
 
 namespace App\Core;
 
-/**
- * Developer Debug Bar for IEF Framework
- */
 class DebugBar
 {
     protected static ?self $instance = null;
-    protected array $queries = [];
-    protected float $startTime;
-    protected array $logs = [];
 
-    protected string $currentRoute = '';
+    protected array  $queries     = [];
+    protected float  $startTime;
+    protected string $currentRoute = '—';
 
     private function __construct()
     {
         $this->startTime = microtime(true);
     }
 
-    public function setRoute(string $route): void
-    {
-        $this->currentRoute = $route;
-    }
-
     public static function getInstance(): self
     {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-        return self::$instance;
+        return self::$instance ??= new self();
     }
+
+    public function setRoute(string $route): void { $this->currentRoute = $route; }
 
     public function logQuery(string $sql, array $params, float $time): void
     {
         $this->queries[] = [
-            'sql' => $sql,
+            'sql'    => $sql,
             'params' => $params,
-            'time' => round($time * 1000, 2) . 'ms'
+            'time'   => round($time * 1000, 2),
         ];
     }
 
-    public function getQueries(): array
-    {
-        return $this->queries;
-    }
-
-    public function getExecutionTime(): string
-    {
-        return round((microtime(true) - $this->startTime) * 1000, 2) . 'ms';
-    }
-
-    public function getMemoryUsage(): string
-    {
-        return round(memory_get_peak_usage() / 1024 / 1024, 2) . ' MB';
-    }
+    public function getQueries(): array       { return $this->queries; }
+    public function getExecutionMs(): float   { return round((microtime(true) - $this->startTime) * 1000, 2); }
+    public function getMemoryMb(): float      { return round(memory_get_peak_usage() / 1024 / 1024, 2); }
 
     public function render(): string
     {
-        if (!ExceptionHandler::isDebug())
-            return '';
+        if (!ExceptionHandler::isDebug()) return '';
 
-        $queries = $this->getQueries();
-        $queryCount = count($queries);
-        $execTime = $this->getExecutionTime();
-        $memory = $this->getMemoryUsage();
-        $phpVersion = PHP_VERSION;
+        $queries  = $this->queries;
+        $count    = count($queries);
+        $exec     = $this->getExecutionMs();
+        $mem      = $this->getMemoryMb();
+        $php      = PHP_VERSION;
+        $route    = htmlspecialchars($this->currentRoute, ENT_QUOTES, 'UTF-8');
 
-        $itemsHtml = '';
-        foreach ($queries as $q) {
-            $itemsHtml .= "
-                <div style='padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.03);font-family:\"JetBrains Mono\", monospace;'>
-                    <div style='color:var(--cyan, #06B6D4);font-size:11px;font-weight:700;margin-bottom:4px;'>SQL EXECUTION</div>
-                    <div style='color:#fff;font-size:12px;opacity:0.9;line-height:1.4;word-break:break-all;'>{$q['sql']}</div>
-                    <div style='display:flex;gap:15px;margin-top:8px;'>
-                        <span style='color:rgba(255,255,255,0.4);font-size:10px;text-transform:uppercase;letter-spacing:1px;'>Latency: <b style='color:#fff'>{$q['time']}</b></span>
-                    </div>
-                </div>";
+        $rows = '';
+        foreach ($queries as $i => $q) {
+            $sql    = htmlspecialchars($q['sql'], ENT_QUOTES, 'UTF-8');
+            $params = htmlspecialchars(json_encode($q['params'], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
+            $idx    = $i + 1;
+            $ms     = $q['time'];
+            $rows .= <<<HTML
+            <div class="ief-row">
+                <div class="ief-row-head"><span class="ief-idx">#$idx</span><span class="ief-ms">$ms ms</span></div>
+                <pre class="ief-sql">$sql</pre>
+                <div class="ief-params">params: $params</div>
+            </div>
+HTML;
+        }
+
+        if ($count === 0) {
+            $rows = '<div class="ief-empty">Bu istekte SQL sorgusu yok.</div>';
         }
 
         return <<<HTML
-        <!-- Titan Pulse Debugger -->
         <style>
-            #titan-pulse {
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                left: 20px;
-                background: rgba(5, 5, 5, 0.85);
-                backdrop-filter: blur(24px) saturate(180%);
-                border: 1px solid rgba(139, 92, 246, 0.3);
-                border-radius: 8px;
-                z-index: 99999;
-                font-family: 'Outfit', sans-serif;
-                color: #fff;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(139, 92, 246, 0.1);
-                overflow: hidden;
-                transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            .pulse-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 0 25px;
-                height: 50px;
-                cursor: pointer;
-                background: linear-gradient(90deg, rgba(139, 92, 246, 0.1), transparent);
-            }
-            .pulse-stats {
-                display: flex;
-                gap: 25px;
-                font-size: 11px;
-                font-weight: 800;
-                text-transform: uppercase;
-                letter-spacing: 1.5px;
-            }
-            .pulse-stats span b {
-                color: #06B6D4;
-                margin-left: 4px;
-            }
-            .pulse-content {
-                display: none;
-                max-height: 400px;
-                overflow-y: auto;
-                border-top: 1px solid rgba(255,255,255,0.05);
-            }
-            .pulse-content::-webkit-scrollbar { width: 4px; }
-            .pulse-content::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); }
+            #ief-debug{position:fixed;bottom:0;left:0;right:0;z-index:99999;
+                background:#ffffff;border-top:1px solid #e2e8f0;
+                color:#0f172a;font:12px/1.4 'Inter',system-ui,sans-serif;
+                box-shadow:0 -4px 12px rgba(15,23,42,.06)}
+            #ief-debug .ief-head{display:flex;align-items:center;justify-content:space-between;
+                padding:10px 18px;cursor:pointer;background:#f8fafc;border-bottom:1px solid transparent}
+            #ief-debug .ief-head.open{border-bottom-color:#e2e8f0}
+            #ief-debug .ief-brand{font-weight:700;letter-spacing:-.01em;color:#1e40af;font-size:13px}
+            #ief-debug .ief-brand .dot{display:inline-block;width:7px;height:7px;background:#06b6d4;border-radius:2px;margin-right:6px;vertical-align:1px}
+            #ief-debug .ief-stats{display:flex;gap:18px;font-size:12px;color:#475569}
+            #ief-debug .ief-stats b{color:#0f172a;font-weight:600}
+            #ief-debug .ief-body{max-height:340px;overflow:auto;display:none;padding:8px 14px;background:#ffffff}
+            #ief-debug .ief-body.open{display:block}
+            #ief-debug .ief-row{padding:10px 12px;border-bottom:1px solid #f1f5f9}
+            #ief-debug .ief-row-head{display:flex;justify-content:space-between;margin-bottom:6px}
+            #ief-debug .ief-idx{color:#06b6d4;font-weight:600}
+            #ief-debug .ief-ms{color:#1e40af;font-weight:600}
+            #ief-debug .ief-sql{margin:0;color:#0f172a;white-space:pre-wrap;word-break:break-word;
+                font-family:'SF Mono',ui-monospace,monospace;font-size:12px;background:#f8fafc;padding:8px 10px;border-radius:4px}
+            #ief-debug .ief-params{color:#94a3b8;margin-top:4px;font-size:11px;font-family:'SF Mono',ui-monospace,monospace}
+            #ief-debug .ief-empty{padding:14px;color:#94a3b8;text-align:center}
         </style>
-        <div id="titan-pulse">
-            <div class="pulse-header" onclick="let c = document.getElementById('pulse-body'); c.style.display = c.style.display === 'block' ? 'none' : 'block'">
-                <div style="display:flex;align-items:center;gap:15px;">
-                    <span style="font-size:18px;filter:drop-shadow(0 0 8px #8B5CF6)">⚡</span>
-                    <span style="font-weight:900;letter-spacing:2px;font-size:12px;">TITAN <span style="color:#06B6D4">PULSE</span> V5.2</span>
-                </div>
-                <div class="pulse-stats">
-                    <div style="display:flex;flex-direction:column;gap:2px;">
-                        <span style="font-size:8px;color:rgba(255,255,255,0.3)">LATENCY</span>
-                        <span><b>{$execTime}</b></span>
-                        <div style="width:100%;height:2px;background:rgba(255,255,255,0.05);border-radius:1px;">
-                            <div style="width:min(100%, calc(({$execTime} / 200) * 100%));height:100%;background:#06B6D4;box-shadow:0 0 5px #06B6D4;"></div>
-                        </div>
-                    </div>
-                    <div style="display:flex;flex-direction:column;gap:2px;">
-                        <span style="font-size:8px;color:rgba(255,255,255,0.3)">MEMORY</span>
-                        <span><b>{$memory}</b></span>
-                        <div style="width:100%;height:2px;background:rgba(255,255,255,0.05);border-radius:1px;">
-                            <div style="width:min(100%, calc(({$memory} / 32) * 100%));height:100%;background:#8B5CF6;box-shadow:0 0 5px #8B5CF6;"></div>
-                        </div>
-                    </div>
-                    <span>Route: <b>{$this->currentRoute}</b></span>
-                    <span>SQL: <b>{$queryCount}</b></span>
-                    <span style="opacity:0.5;margin-left:auto">PHP v{$phpVersion}</span>
+        <div id="ief-debug">
+            <div class="ief-head" onclick="var b=this.nextElementSibling;var o=b.classList.toggle('open');this.classList.toggle('open',o)">
+                <div><span class="ief-brand"><span class="dot"></span>ief-framework</span> <span style="opacity:.5;font-size:11px;margin-left:6px">debug bar</span></div>
+                <div class="ief-stats">
+                    <span>route <b>$route</b></span>
+                    <span>sql <b>$count</b></span>
+                    <span>time <b>{$exec}ms</b></span>
+                    <span>mem <b>{$mem}MB</b></span>
+                    <span style="opacity:.5">php $php</span>
                 </div>
             </div>
-            <div id="pulse-body" class="pulse-content">
-                <div style="padding:15px 25px;background:rgba(255,255,255,0.02);font-weight:900;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.3);text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,0.05);">Matrix Query Logs</div>
-                {$itemsHtml}
-            </div>
+            <div class="ief-body">$rows</div>
         </div>
 HTML;
     }

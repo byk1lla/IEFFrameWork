@@ -1,16 +1,23 @@
 <?php
+/**
+ * Mail Konfigürasyonu — şimdilik stub
+ *
+ * @package IEF Framework
+ */
 
 return [
-    'from_email' => 'noreply@iefsoftware.tr',
-    'from_name' => 'IEF Framework',
-    'driver' => 'mail', // Options: mail, smtp
+    'driver' => 'log', // log | smtp | sendmail (gelecekte)
 
-    // SMTP Configuration (For future implementation)
+    'from' => [
+        'address' => 'no-reply@iefsoftware.tr',
+        'name'    => 'IEF Framework',
+    ],
+
     'smtp' => [
-        'host' => 'localhost',
-        'port' => 587,
-        'username' => '',
-        'password' => '',
-        'encryption' => 'tls'
-    ]
+        'host'       => 'smtp.example.com',
+        'port'       => 587,
+        'username'   => '',
+        'password'   => '',
+        'encryption' => 'tls', // tls | ssl | null
+    ],
 ];

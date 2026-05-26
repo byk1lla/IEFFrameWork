@@ -1,80 +1,59 @@
 @extends('layouts.app')
 
+@section('title', $post->title)
+
 @section('content')
-<style>
-    .titan-post-stage {
-        max-width: 900px;
-        margin: 0 auto;
-        padding-bottom: 100px;
-    }
+<article class="max-w-3xl mx-auto px-6 lg:px-8 pt-16 pb-24">
 
-    .titan-post-header {
-        margin-bottom: 60px;
-        text-align: center;
-    }
+    {{-- Geri --}}
+    <a href="/blog" class="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 mb-8 transition">
+        <i class="fa-solid fa-arrow-left text-[11px]"></i> Tüm yazılar
+    </a>
 
-    .titan-post-header h1 {
-        font-size: 4rem;
-        font-weight: 900;
-        letter-spacing: -3px;
-        text-transform: uppercase;
-        margin-bottom: 20px;
-        line-height: 1.1;
-    }
-
-    .titan-post-meta {
-        font-size: 0.8rem;
-        font-weight: 800;
-        color: var(--purple);
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        margin-bottom: 40px;
-    }
-
-    .titan-post-body {
-        background: var(--obsidian);
-        border: 1px solid var(--border);
-        padding: 60px;
-        border-radius: 4px;
-        font-size: 1.25rem;
-        line-height: 2;
-        color: var(--text-dim);
-        font-weight: 400;
-    }
-
-    .titan-post-body p {
-        margin-bottom: 30px;
-    }
-
-    .back-titan {
-        display: inline-block;
-        margin-top: 50px;
-        font-weight: 900;
-        color: var(--cyan);
-        text-decoration: none;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        font-size: 0.8rem;
-    }
-
-    .back-titan:hover {
-        text-shadow: 0 0 10px var(--cyan);
-    }
-</style>
-
-<div class="titan-post-stage">
-    <div class="titan-post-header">
-        <div class="titan-post-meta">
-            {{ date('M d, Y', strtotime($post->created_at ?? 'now')) }} • {{ trans('mission_by') }} {{ $post->author ??
-            'UNKNOWN' }}
+    {{-- Header --}}
+    <header class="mb-10">
+        <div class="flex items-center gap-3 text-[11.5px] text-slate-400 font-semibold tracking-widest uppercase mb-4">
+            @if($category)
+                <a href="/blog" class="text-brand-700 hover:text-brand-900">{{ $category->name }}</a>
+                <span class="text-slate-300">·</span>
+            @endif
+            <span><i class="fa-regular fa-calendar text-[10px] mr-1"></i>{{ format_date($post->published_at ?? $post->created_at) }}</span>
         </div>
-        <h1>{{ $post->title ?? 'NO_TITLE' }}</h1>
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tighter leading-[1.1] text-slate-900 mb-5">{{ $post->title }}</h1>
+        @if($post->excerpt)
+            <p class="text-lg text-slate-600 leading-relaxed">{{ $post->excerpt }}</p>
+        @endif
+    </header>
+
+    {{-- Cover --}}
+    @if($post->cover_image)
+        <figure class="mb-10 -mx-4 md:mx-0">
+            <img src="{{ $post->coverUrl() }}" alt="{{ e($post->title) }}" class="w-full max-h-[480px] object-cover rounded-2xl shadow-soft">
+        </figure>
+    @endif
+
+    {{-- Content --}}
+    <div class="prose prose-slate max-w-none text-[16px] leading-[1.75] text-slate-700">
+        {!! nl2br(e($post->content)) !!}
     </div>
 
-    <article class="titan-post-body">
-        {!! nl2br(htmlspecialchars($post->content ?? '')) !!}
-    </article>
-
-    <a href="/blog" class="back-titan">← {{ trans('back_to_blog') }}</a>
-</div>
+    {{-- Footer / share --}}
+    <footer class="mt-12 pt-8 border-t border-slate-100 flex items-center justify-between flex-wrap gap-4">
+        <a href="/blog" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-brand-700 transition">
+            <i class="fa-solid fa-arrow-left text-[11px]"></i> Tüm yazılara dön
+        </a>
+        <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-400 mr-1">Paylaş:</span>
+            <a href="https://twitter.com/intent/tweet?url={{ urlencode(url($post->url())) }}&text={{ urlencode($post->title) }}" target="_blank" rel="noopener" class="w-9 h-9 flex items-center justify-center bg-white border border-slate-200 hover:border-slate-900 text-slate-600 hover:text-slate-900 rounded-md transition" title="X / Twitter">
+                <i class="fa-brands fa-x-twitter text-[14px]"></i>
+            </a>
+            <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ urlencode(url($post->url())) }}" target="_blank" rel="noopener" class="w-9 h-9 flex items-center justify-center bg-white border border-slate-200 hover:border-slate-900 text-slate-600 hover:text-slate-900 rounded-md transition" title="LinkedIn">
+                <i class="fa-brands fa-linkedin-in text-[14px]"></i>
+            </a>
+            <a href="https://wa.me/?text={{ urlencode($post->title . ' — ' . url($post->url())) }}" target="_blank" rel="noopener" class="w-9 h-9 flex items-center justify-center bg-white border border-slate-200 hover:border-slate-900 text-slate-600 hover:text-slate-900 rounded-md transition" title="WhatsApp">
+                <i class="fa-brands fa-whatsapp text-[14px]"></i>
+            </a>
+        </div>
+    </footer>
+</article>
 @endsection

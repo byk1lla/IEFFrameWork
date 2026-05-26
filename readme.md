@@ -1,100 +1,152 @@
-# 🦅 IEF Framework | Titan Global
+# ief-framework
 
-> **Version:** 1.2.0 "Titan Global"  
-> **Author:** IEF Software  
-> **License:** MIT
-
-## 🌟 Hakkında
-
-**IEF Framework**, modern PHP uygulamaları geliştirmek için tasarlanmış, **hafif (lightweight)**, **ultra hızlı** ve **elit** bir MVC (Model-View-Controller) çatısıdır. V1.2.0 "Titan Global" sürümü ile birlikte, mimari stabilite ve üst düzey geliştirici deneyimi (Developer Experience) ön plana çıkarılmıştır.
-
-Framework; gelişmiş yönlendirme (routing), **Obsidian ORM**, **Titan Guard** kimlik doğrulama, **Titan Pulse** görsel hata ayıklayıcı ve esnek middleware desteği ile gelir.
+> **Sürüm:** 2.0.0 · **PHP:** 8.1+ · **Lisans:** MIT
+> Modern, sıfır-konfigürasyonlu PHP MVC framework.
+> [iefsoftware.tr](https://iefsoftware.tr) · [GitHub](https://github.com/byk1lla/IEFFrameWork) · [Packagist](https://packagist.org/packages/iefsoftware/ief-framework)
 
 ---
 
-## 🚀 Öne Çıkan Özellikler
+## 🚀 Tek Komutla Başla
 
-- **⚡ Titan Core Performance:** Gereksiz yüklerden arındırılmış, optimize edilmiş çekirdek yapı.
-- **🛡️ Titan Guard (Auth):** Dahili, güvenli ve estetik kimlik doğrulama sistemi (Login/Register/Middleware).
-- **📡 Titan Pulse (Debugger):** Glassmorphism tasarımlı, gerçek zamanlı SQL, Latency ve Memory takibi.
-- **💾 Obsidian ORM:** Nesne tabanlı, "Lazy Building" destekli ve UUID/Auto-increment uyumlu veritabanı yönetimi.
-- **🛣️ Titan Router:** RESTful rotalar, middleware gruplama ve akıllı enjeksiyon desteği.
-- **💎 Premium Aesthetic:** Dark-mode odaklı, neon cyan vurgularla modern ve profesyonel arayüzler.
-
----
-
-## 🛠️ Kurulum
-
-### Gereksinimler
-- PHP 8.1 veya üzeri
-- Composer
-- SQLite (Önerilen) veya MySQL/MariaDB
-
-### Hızlı Başlangıç
-
-1. **Projeyi Klonlayın:**
-   ```bash
-   git clone https://github.com/byk1lla/IEFFrameWork.git my-app
-   cd my-app
-   ```
-
-2. **Bağımlılıkları Yükleyin:**
-   ```bash
-   composer install
-   ```
-
-3. **Veritabanı Hazırlığı:**
-   Varsayılan olarak `database_v5.sqlite` kullanılır. Migrasyonları çalıştırmak için:
-   ```bash
-   ./ief migrate
-   ```
-
-4. **Sunucuyu Başlatın:**
-   ```bash
-   ./ief serve
-   ```
-   Tarayıcınızda `http://localhost:8000` adresine gidin. Pilot hesap: `nexus@core.id` / `matrix123`
-
----
-
-## 📖 Mimari Yapı
-
-### 1. Dizin Yapısı
-```
-/
-├── app/
-│   ├── Controllers/   # Business logic (AuthController, AdminController vb.)
-│   ├── Core/          # Framework çekirdeği (Titan Core Engine)
-│   ├── Models/        # Obsidian Modelleri
-│   ├── Middleware/    # Titan Guard koruma katmanları
-│   └── Helpers/       # Elit yardımcı araçlar
-├── config/            # Yapılandırma matrisi (App, Database, Routes)
-├── public/            # Web sunucusu giriş noktası ve assets
-├── storage/           # Loglar ve SQLite veritabanı
-├── vendor/            # Composer paketleri
-├── ief                # Aether CLI aracı
-└── index.php          # Global Matrix giriş noktası
+```bash
+composer create-project iefsoftware/ief-framework projem
+cd projem
+./ief migrate
+./ief user:create
+./ief serve
 ```
 
-### 2. Titan Guard & Güvenlik
+Tarayıcıdan `http://localhost:8000` — kurulum tamam.
 
-Rotalarınızı tek bir satırla koruma altına alabilirsiniz:
+---
 
-```php
-Router::get('/admin', 'AdminController@index', [
-    'middleware' => \App\Middleware\AuthMiddleware::class
-]);
+## 📚 Tam Dokümantasyon
+
+**[👉 Dokümantasyonu Aç](https://github.com/byk1lla/IEFFrameWork/tree/main/docs)** veya canlı sitende `/docs` adresinden eriş.
+
+43+ konu başlığı, Laravel docs benzeri sidebar + arama + syntax highlight ile.
+
+---
+
+## ✨ Özellikler
+
+| Modül | Açıklama |
+|---|---|
+| **Router** | RESTful + middleware grupları + closure desteği |
+| **Obsidian ORM** | Active Record + Schema Builder DSL (MySQL/SQLite) |
+| **Blade-lite** | `@extends`, `@section`, `@if`, `@foreach`, `@csrf`, `@php`, ... |
+| **Titan Guard Auth** | Session-based + CSRF + role tabanlı + AuthMiddleware |
+| **Site Editör** | **Canlı sayfa üzerinde tıkla-düzenle** — metin, görsel, ikon |
+| **Tema Sidebar** | Editör'de logo/favicon/renk/font upload, canlı kayıt |
+| **AI / Groq** | Blog yazısı AI ile oluştur (Llama 3.3 70B) |
+| **Trafik Analytics** | First-party ziyaretçi/oturum/event tracking + ApexCharts |
+| **Admin Paneli** | 7-sekme settings, mesaj/randevu/blog/medya/user yönetimi |
+| **Bakım Modu** | Beyaz tema, brand renkli, animasyonlu 503 sayfası |
+| **Mail (PHPMailer)** | `log` / `mail` / `smtp` driver |
+| **Debug Bar** | SQL/route/latency/memory canlı gözlem |
+| **CLI (`./ief`)** | `serve`, `migrate`, `make:*`, `user:create`, `route:list`, ... |
+| **Docs Sitesi** | `/docs` — built-in dokümantasyon viewer (Parsedown + Prism) |
+
+---
+
+## 🎨 Frontend Stack
+
+- **Landing:** Tailwind + Font Awesome + Poppins + HTMX + SweetAlert2 + GSAP + animate.css
+- **Admin:** + ApexCharts + DataTables.js 2.x + Quill 2.0
+
+CDN üzerinden geliyor — production'da `tailwindcss --minify` ile küçültebilirsin.
+
+---
+
+## 📐 Felsefe
+
+1. **Sıfır konfigürasyon** — `.env` yok, container yok, magic auto-discovery yok
+2. **Tek paket** — Routing/ORM/View/Auth/Migration/CLI hepsi içeride
+3. **Okunur kod** — Framework çekirdeği bir hafta sonu okunup anlaşılır
+
+> 4 dış bağımlılık: `phpmailer/phpmailer`, `symfony/uid`, `monolog/monolog`, `erusev/parsedown`. Vendor dizini ~5MB.
+
+---
+
+## 🛠 Geliştirme
+
+```bash
+./ief serve                # http://localhost:8000
+./ief migrate              # Bekleyen migration'ları çalıştır
+./ief migrate:fresh        # Sıfırdan kur (DİKKAT: tüm veriyi siler)
+./ief make:controller PostController
+./ief make:model Post
+./ief make:migration create_posts_table
+./ief make:middleware EnsureAdmin
+./ief user:create          # Interaktif admin (şifre gizli)
+./ief route:list           # Tüm route'ları tablo halinde
+./ief cache:clear
+./ief key:generate
+./ief help
 ```
 
 ---
 
-## 🏗️ Katkıda Bulunma
+## 📂 Dizin Yapısı
 
-1. Fork yapın.
-2. Titan-branch oluşturun (`git checkout -b feature/titan-extension`).
-3. Commit atın (`git commit -m 'Release: v1.2.0 build'`).
-4. Push yapın ve Pull Request açın.
+```
+app/
+├── Controllers/        # HTTP controller'lar (Admin/ alt dizini)
+├── Core/               # Framework çekirdeği (Router, Auth, View, ORM, ...)
+├── Database/Migrations/
+├── Helpers/            # Global fonksiyonlar
+├── Middleware/
+├── Models/
+├── Services/           # MailService, GroqService, AnalyticsService
+└── Views/              # Blade-lite template'ler
+
+config/                 # app, database, mail, services, routes
+docs/                   # 43 MD dosyası — /docs sayfasında render edilir
+public/                 # asset'ler + uploads
+storage/                # logs, cache
+ief                     # CLI giriş noktası
+index.php               # Tek HTTP entry point
+```
 
 ---
 
-**IEF Framework** &copy; 2026 - Titan Global Edition.
+## 🔐 Güvenlik
+
+- Bcrypt şifre hashing (cost 10+)
+- CSRF token tüm POST formlarda
+- SQL injection: prepared statements her yerde
+- XSS: `{{ }}` otomatik escape
+- Honeypot bot koruması (formlarda)
+- Rate limit (Settings > Güvenlik)
+- HTTPS zorlama (Settings > Güvenlik)
+- IP blocklist (CIDR destekli)
+- Audit log: `storage/logs/app-YYYY-MM-DD.log`
+
+---
+
+## 🆕 v2.0.0 — Titan Global
+
+**Yayın:** 24 Mayıs 2026
+
+Major redesign + yeni özellik dalgası:
+
+- Onur-style canlı inline editör + tema sidebar
+- 7-sekme admin settings
+- Modern bakım sayfası
+- Groq AI entegrasyonu
+- First-party trafik analytics
+- Built-in dokümantasyon sitesi
+
+> Detay: [Sürüm Notları](docs/release-notes.md) · [Yükseltme Rehberi](docs/upgrade.md)
+
+---
+
+## 🤝 Katkı
+
+PR'ları açabilir, issue açabilirsin. Detay: [docs/contributing.md](docs/contributing.md).
+
+---
+
+## 📄 Lisans
+
+MIT © 2026 [IEF Software](https://iefsoftware.tr)

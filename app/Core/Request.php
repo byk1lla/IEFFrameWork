@@ -1,102 +1,89 @@
 <?php
 /**
- * HTTP İstek Sınıfı
- * 
- * @package    IEF Framework
+ * Request — HTTP isteğini soyutlar.
+ *
+ * Singleton (Request::getInstance()). Router method-injection ile
+ * controller'lara verir.
+ *
+ * @package IEF Framework
  */
+
+declare(strict_types=1);
 
 namespace App\Core;
 
 class Request
 {
     protected static ?Request $instance = null;
+
     protected array $get;
     protected array $post;
     protected array $files;
     protected array $server;
+    protected array $cookies;
     protected array $headers;
     protected ?array $json = null;
 
     public function __construct()
     {
-        $this->get = $_GET;
-        $this->post = $_POST;
-        $this->files = $_FILES;
-        $this->server = $_SERVER;
+        $this->get     = $_GET     ?? [];
+        $this->post    = $_POST    ?? [];
+        $this->files   = $_FILES   ?? [];
+        $this->server  = $_SERVER  ?? [];
+        $this->cookies = $_COOKIE  ?? [];
         $this->headers = $this->parseHeaders();
     }
 
-    public static function getInstance(): Request
+    public static function getInstance(): self
     {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-        return self::$instance;
+        return self::$instance ??= new self();
     }
 
     protected function parseHeaders(): array
     {
         $headers = [];
-        foreach ($this->server as $key => $value) {
-            if (str_starts_with($key, 'HTTP_')) {
-                $name = str_replace('_', '-', substr($key, 5));
-                $headers[$name] = $value;
+        foreach ($this->server as $k => $v) {
+            if (str_starts_with($k, 'HTTP_')) {
+                $name = str_replace('_', '-', substr($k, 5));
+                $headers[strtoupper($name)] = $v;
             }
         }
+        // CONTENT_TYPE & CONTENT_LENGTH HTTP_ prefix'i taşımaz
+        if (isset($this->server['CONTENT_TYPE']))   $headers['CONTENT-TYPE']   = $this->server['CONTENT_TYPE'];
+        if (isset($this->server['CONTENT_LENGTH'])) $headers['CONTENT-LENGTH'] = $this->server['CONTENT_LENGTH'];
         return $headers;
     }
 
+    // ─── Method & URI ──────────────────────────────────────────────
     public function method(): string
     {
-        return $this->server['REQUEST_METHOD'] ?? 'GET';
+        $m = strtoupper($this->server['REQUEST_METHOD'] ?? 'GET');
+        if ($m === 'POST') {
+            $override = $this->post['_method'] ?? $this->header('X-HTTP-Method-Override');
+            if ($override) $m = strtoupper($override);
+        }
+        return $m;
     }
+
+    public function isMethod(string $method): bool { return $this->method() === strtoupper($method); }
+    public function isGet(): bool                  { return $this->isMethod('GET'); }
+    public function isPost(): bool                 { return $this->isMethod('POST'); }
+    public function isPut(): bool                  { return $this->isMethod('PUT'); }
+    public function isDelete(): bool               { return $this->isMethod('DELETE'); }
 
     public function uri(): string
     {
-        return parse_url($this->server['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+        return parse_url($this->server['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
     }
 
-    public function isMethod(string $method): bool
-    {
-        return strtoupper($this->method()) === strtoupper($method);
-    }
+    public function isAjax(): bool { return $this->header('X-Requested-With') === 'XMLHttpRequest'; }
+    public function isHtmx(): bool { return $this->header('HX-Request') === 'true'; }
+    public function isJson(): bool { return str_contains((string) $this->header('Content-Type', ''), 'application/json'); }
 
-    public function isGet(): bool
+    // ─── Input ─────────────────────────────────────────────────────
+    public function input(string $key, mixed $default = null): mixed
     {
-        return $this->isMethod('GET');
-    }
-
-    public function isPost(): bool
-    {
-        return $this->isMethod('POST');
-    }
-
-    public function isAjax(): bool
-    {
-        return $this->header('X-Requested-With') === 'XMLHttpRequest';
-    }
-
-    public function isHtmx(): bool
-    {
-        return $this->header('HX-Request') === 'true';
-    }
-
-    public function isJson(): bool
-    {
-        return str_contains($this->header('Content-Type', ''), 'application/json');
-    }
-
-    public function input(string $key, $default = null)
-    {
-        return $this->post[$key] ?? $this->get[$key] ?? $this->json()[$key] ?? $default;
-    }
-
-    /**
-     * input() metodunun alias'ı
-     */
-    public function get(string $key, $default = null)
-    {
-        return $this->input($key, $default);
+        return $this->post[$key] ?? $this->get[$key] ?? ($this->json()[$key] ?? $default);
     }
 
     public function all(): array
@@ -106,38 +93,29 @@ class Request
 
     public function only(array $keys): array
     {
-        $all = $this->all();
-        return array_intersect_key($all, array_flip($keys));
+        return array_intersect_key($this->all(), array_flip($keys));
     }
 
     public function except(array $keys): array
     {
-        $all = $this->all();
-        return array_diff_key($all, array_flip($keys));
+        return array_diff_key($this->all(), array_flip($keys));
     }
 
     public function has(string $key): bool
     {
-        return isset($this->post[$key]) || isset($this->get[$key]);
+        return isset($this->post[$key]) || isset($this->get[$key]) || isset(($this->json() ?? [])[$key]);
     }
 
-    public function query(?string $key = null, $default = null)
+    public function query(?string $key = null, mixed $default = null): mixed
     {
-        if ($key === null) return $this->get;
-        return $this->get[$key] ?? $default;
+        return $key === null ? $this->get : ($this->get[$key] ?? $default);
     }
 
-    public function post(?string $key = null, $default = null)
+    public function post(?string $key = null, mixed $default = null): mixed
     {
-        if ($key === null) return $this->post;
-        return $this->post[$key] ?? $default;
+        return $key === null ? $this->post : ($this->post[$key] ?? $default);
     }
 
-    /**
-     * Request verilerine yeni değerler ekle veya mevcut değerleri güncelle
-     * @param array $data Eklenecek/güncellenecek veriler
-     * @return self
-     */
     public function merge(array $data): self
     {
         $this->post = array_merge($this->post, $data);
@@ -147,49 +125,40 @@ class Request
     public function json(): ?array
     {
         if ($this->json === null && $this->isJson()) {
-            $content = file_get_contents('php://input');
-            $this->json = json_decode($content, true) ?? [];
+            $body = file_get_contents('php://input') ?: '';
+            $this->json = json_decode($body, true) ?? [];
         }
         return $this->json;
     }
 
-    public function file(string $key): ?array
-    {
-        return $this->files[$key] ?? null;
-    }
+    // ─── Files ─────────────────────────────────────────────────────
+    public function file(string $key): ?array      { return $this->files[$key] ?? null; }
+    public function hasFile(string $key): bool     { return isset($this->files[$key]) && $this->files[$key]['error'] === UPLOAD_ERR_OK; }
+    public function allFiles(): array              { return $this->files; }
 
-    public function hasFile(string $key): bool
+    // ─── Headers / Cookies / Server ────────────────────────────────
+    public function header(string $key, mixed $default = null): mixed
     {
-        return isset($this->files[$key]) && $this->files[$key]['error'] === UPLOAD_ERR_OK;
-    }
-
-    public function header(string $key, $default = null): ?string
-    {
-        // Gelen anahtarı büyük harfe çevir ve alt çizgileri tireye çevir (parseHeaders ile uyumlu olması için)
         $key = strtoupper(str_replace('_', '-', $key));
-        
-        // Eğer anahtar hala HTTP- ile başlıyorsa temizle (parseHeaders HTTP_ kısmını attığı için)
-        if (str_starts_with($key, 'HTTP-')) {
-            $key = substr($key, 5);
-        }
-        
         return $this->headers[$key] ?? $default;
     }
 
+    public function allHeaders(): array  { return $this->headers; }
+    public function cookie(string $key, mixed $default = null): mixed { return $this->cookies[$key] ?? $default; }
+    public function server(string $key, mixed $default = null): mixed { return $this->server[$key] ?? $default; }
+
     public function bearerToken(): ?string
     {
-        $auth = $this->header('Authorization', '');
-        if (str_starts_with($auth, 'Bearer ')) {
-            return substr($auth, 7);
-        }
-        return null;
+        $auth = (string) $this->header('Authorization', '');
+        return str_starts_with($auth, 'Bearer ') ? substr($auth, 7) : null;
     }
 
+    // ─── URL & IP ──────────────────────────────────────────────────
     public function ip(): string
     {
-        return $this->server['HTTP_X_FORWARDED_FOR'] 
-            ?? $this->server['HTTP_CLIENT_IP'] 
-            ?? $this->server['REMOTE_ADDR'] 
+        return $this->server['HTTP_X_FORWARDED_FOR']
+            ?? $this->server['HTTP_CLIENT_IP']
+            ?? $this->server['REMOTE_ADDR']
             ?? '0.0.0.0';
     }
 
@@ -198,43 +167,26 @@ class Request
         return $this->server['HTTP_USER_AGENT'] ?? '';
     }
 
-    public function schemeAndHttpHost(): string
+    public function schemeAndHost(): string
     {
-        $scheme = ($this->server['HTTPS'] ?? 'off') === 'on' ? 'https' : 'http';
-        $host = $this->server['HTTP_HOST'] ?? 'localhost';
-        return $scheme . '://' . $host;
+        $secure = ($this->server['HTTPS'] ?? '') === 'on'
+               || ($this->server['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
+        return ($secure ? 'https' : 'http') . '://' . ($this->server['HTTP_HOST'] ?? 'localhost');
     }
 
-    public function url(): string
-    {
-        return $this->schemeAndHttpHost() . $this->uri();
-    }
+    public function url(): string      { return $this->schemeAndHost() . $this->uri(); }
+    public function fullUrl(): string  { $q = $this->server['QUERY_STRING'] ?? ''; return $this->url() . ($q ? '?' . $q : ''); }
 
-    public function fullUrl(): string
+    // ─── Validation kısayolu ───────────────────────────────────────
+    public function validate(array $rules, array $messages = []): array
     {
-        $query = $this->server['QUERY_STRING'] ?? '';
-        return $this->url() . ($query ? '?' . $query : '');
-    }
-
-    /**
-     * Request verilerini doğrula ve döndür
-     * @param array $rules Validasyon kuralları
-     * @return array Doğrulanmış veriler
-     * @throws \Exception Validasyon hatası durumunda
-     */
-    public function validate(array $rules): array
-    {
-        $data = $this->all();
-        $validator = new Validator($data, $rules);
-        
-        if (!$validator->validate()) {
-            $errors = $validator->errors();
-            $firstError = reset($errors);
-            $errorMsg = is_array($firstError) ? $firstError[0] : $firstError;
-            throw new \Exception($errorMsg ?? 'Validasyon hatası');
+        $v = new Validator($this->all(), $rules, $messages);
+        if ($v->fails()) {
+            $errs = $v->errors();
+            $first = reset($errs);
+            $msg = is_array($first) ? ($first[0] ?? 'Validasyon hatası') : (string) $first;
+            throw new \RuntimeException($msg);
         }
-        
-        // Sadece kurallarda belirtilen alanları döndür
-        return array_intersect_key($data, $rules);
+        return array_intersect_key($this->all(), $rules);
     }
 }
