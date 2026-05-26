@@ -1,36 +1,48 @@
 <?php
+/**
+ * Resource — JSON API dönüşümleri için base.
+ *
+ * Kullanım:
+ *   class UserResource extends Resource {
+ *       public function toArray(): array { return ['id'=>$this->resource->id, ...]; }
+ *   }
+ *   return UserResource::make($user)->respond();
+ *
+ * @package IEF Framework
+ */
+
+declare(strict_types=1);
 
 namespace App\Core;
 
-/**
- * Base API Resource for JSON transformations
- */
 abstract class Resource
 {
-    protected $resource;
+    protected mixed $resource;
 
-    public function __construct($resource)
+    public function __construct(mixed $resource)
     {
         $this->resource = $resource;
     }
 
     abstract public function toArray(): array;
 
-    public static function make($resource): self
+    public static function make(mixed $resource): static
     {
         return new static($resource);
     }
 
-    public static function collection(array $resources): array
+    /** @param iterable $items */
+    public static function collection(iterable $items): array
     {
-        return array_map(fn($item) => (new static($item))->toArray(), $resources);
+        $out = [];
+        foreach ($items as $item) {
+            $out[] = (new static($item))->toArray();
+        }
+        return $out;
     }
 
-    public function response(): string
+    public function respond(int $status = 200): void
     {
-        header('Content-Type: application/json');
-        return json_encode([
-            'data' => $this->toArray()
-        ]);
+        (new Response())->json(['data' => $this->toArray()], $status);
     }
 }

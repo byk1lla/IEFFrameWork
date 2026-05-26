@@ -1,0 +1,27 @@
+<?php
+/**
+ * Üçüncü taraf servis ayarları (API key'ler vs.).
+ *
+ * Bu dosyayı doğrudan düzenleyin — UI'dan değiştirilmez.
+ * Güvenlik için: .gitignore'a eklemek isteyebilirsiniz ya da
+ * bu dosyayı şablon tutup `config/services.local.php` kullanabilirsiniz.
+ *
+ * @package IEF Framework
+ */
+
+return [
+
+    /*
+     * ── Groq Cloud (https://console.groq.com/keys) ───────────────
+     * Blog → "AI ile Oluştur" özelliği bunu kullanır.
+     * Boş bırakılırsa AI butonu pasif gelir.
+     */
+    'groq' => [
+        'api_key' => '',              // gsk_... ile başlayan API anahtarınız
+        'model'   => 'llama-3.3-70b-versatile',
+        // Diğer modeller: llama-3.1-8b-instant | mixtral-8x7b-32768 | gemma2-9b-it
+    ],
+
+    // İleride: openai, anthropic, stripe, twilio, vs. buraya eklenir.
+
+];

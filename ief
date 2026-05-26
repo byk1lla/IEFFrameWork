@@ -1,218 +1,291 @@
 #!/usr/bin/env php
 <?php
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════
+ *  IEF Framework — Command Line Tool
+ * ═══════════════════════════════════════════════════════════════════════════════
+ */
 
-// CLI Entry Point
-define('ROOT_PATH', __DIR__);
-define('APP_PATH', ROOT_PATH . '/app');
-define('CONFIG_PATH', ROOT_PATH . '/config');
+declare(strict_types=1);
+
+define('ROOT_PATH',    __DIR__);
+define('APP_PATH',     ROOT_PATH . '/app');
+define('CONFIG_PATH',  ROOT_PATH . '/config');
 define('STORAGE_PATH', ROOT_PATH . '/storage');
+define('PUBLIC_PATH',  ROOT_PATH . '/public');
+define('ASSETS_PATH',  ROOT_PATH . '/assets');
+define('VIEW_PATH',    APP_PATH  . '/Views');
 
-if (file_exists(ROOT_PATH . '/vendor/autoload.php')) {
-    require_once ROOT_PATH . '/vendor/autoload.php';
-} else {
-    echo "Error: Vendor directory not found. Please run 'composer install'.\n";
+if (!file_exists(ROOT_PATH . '/vendor/autoload.php')) {
+    fwrite(STDERR, "Vendor dizini yok. Önce 'composer install' çalıştır.\n");
     exit(1);
 }
+require_once ROOT_PATH . '/vendor/autoload.php';
+
+// Renk yardımcıları (ANSI)
+$c = [
+    'reset' => "\033[0m", 'bold' => "\033[1m", 'dim' => "\033[2m",
+    'red'   => "\033[31m", 'green' => "\033[32m", 'yellow' => "\033[33m",
+    'blue'  => "\033[34m", 'magenta'=> "\033[35m", 'cyan' => "\033[36m",
+];
+$say  = fn (string $msg, string $color = 'reset') => print($c[$color] . $msg . $c['reset'] . "\n");
+$bold = fn (string $msg) => print($c['bold'] . $msg . $c['reset'] . "\n");
+
+$bold("\nIEF Framework CLI · v2.0.0");
+$say("───────────────────────────────────────", 'dim');
+
+$args    = array_slice($argv, 1);
+$command = $args[0] ?? 'help';
 
 use App\Core\Database;
 
-// Basic CLI Router
-$args = array_slice($argv, 1);
-$command = $args[0] ?? 'help';
+try {
+    switch ($command) {
 
-echo "\n🦅 IEF Framework CLI Tool\n";
-echo "═════════════════════════\n\n";
+        // ──────────────────────────── SERVE ──────────────────────────────
+        case 'serve':
+            $host = '127.0.0.1';
+            $port = (int) ($args[1] ?? 8000);
+            $say("Geliştirme sunucusu başlıyor: http://{$host}:{$port}", 'cyan');
+            passthru("php -S {$host}:{$port} -t " . escapeshellarg(ROOT_PATH) . " " . escapeshellarg(ROOT_PATH . '/index.php'));
+            break;
 
-switch ($command) {
-    case 'serve':
-        $port = $args[1] ?? 8000;
-        echo "Updating development server at http://localhost:$port...\n";
-        passthru("php -S localhost:$port");
-        break;
+        // ──────────────────────────── MIGRATE ────────────────────────────
+        case 'migrate':
+            require_once APP_PATH . '/Core/MigrationRunner.php';
+            (new \App\Core\MigrationRunner())->migrate();
+            break;
 
-    case 'make:controller':
-        $name = $args[1] ?? null;
-        if (!$name) {
-            echo "Usage: ./ief make:controller <Name>\n";
-            exit(1);
-        }
-        // Sanitize name: remove .php if user typed it
-        $name = str_replace('.php', '', $name);
-        $name = ucfirst($name);
-        if (!str_ends_with($name, 'Controller')) {
-            $name .= 'Controller';
-        }
+        case 'migrate:rollback':
+            require_once APP_PATH . '/Core/MigrationRunner.php';
+            $steps = (int) ($args[1] ?? 1);
+            (new \App\Core\MigrationRunner())->rollback($steps);
+            break;
 
-        $path = APP_PATH . "/Controllers/{$name}.php";
-        if (file_exists($path)) {
-            echo "Error: Controller {$name} already exists.\n";
-            exit(1);
-        }
+        case 'migrate:fresh':
+            require_once APP_PATH . '/Core/MigrationRunner.php';
+            (new \App\Core\MigrationRunner())->fresh();
+            break;
 
-        $template = "<?php\n\nnamespace App\Controllers;\n\nuse App\Core\Controller;\n\nclass {$name} extends Controller\n{\n    public function index()\n    {\n        // returning view\n    }\n}\n";
+        case 'migrate:status':
+            require_once APP_PATH . '/Core/MigrationRunner.php';
+            (new \App\Core\MigrationRunner())->status();
+            break;
 
-        file_put_contents($path, $template);
-        echo "Controller created: {$path}\n";
-        break;
+        // ──────────────────────────── MAKE: ──────────────────────────────
+        case 'make:controller':
+            $name = $args[1] ?? null;
+            if (!$name) { $say("Kullanım: ./ief make:controller <Name>", 'yellow'); exit(1); }
+            $name = ucfirst(str_replace('.php', '', $name));
+            if (!str_ends_with($name, 'Controller')) $name .= 'Controller';
+            $path = APP_PATH . "/Controllers/{$name}.php";
+            if (file_exists($path)) { $say("Zaten var: {$path}", 'red'); exit(1); }
+            $stub = "<?php\n\nnamespace App\\Controllers;\n\nuse App\\Core\\Controller;\nuse App\\Core\\Request;\n\nclass {$name} extends Controller\n{\n    public function index(Request \$request)\n    {\n        return \$this->view('{$name}.index');\n    }\n}\n";
+            file_put_contents($path, $stub);
+            $say("✓ Controller oluşturuldu: {$path}", 'green');
+            break;
 
-    case 'make:model':
-        $name = $args[1] ?? null;
-        if (!$name) {
-            echo "Usage: ./ief make:model <Name>\n";
-            exit(1);
-        }
-        $name = str_replace('.php', '', $name);
-        $name = ucfirst($name);
+        case 'make:model':
+            $name = $args[1] ?? null;
+            if (!$name) { $say("Kullanım: ./ief make:model <Name>", 'yellow'); exit(1); }
+            $name = ucfirst(str_replace('.php', '', $name));
+            $path = APP_PATH . "/Models/{$name}.php";
+            if (file_exists($path)) { $say("Zaten var: {$path}", 'red'); exit(1); }
+            $table = strtolower($name) . 's';
+            $stub = "<?php\n\nnamespace App\\Models;\n\nuse App\\Core\\Model;\n\nclass {$name} extends Model\n{\n    protected static string \$table = '{$table}';\n    protected static array \$fillable = [];\n}\n";
+            file_put_contents($path, $stub);
+            $say("✓ Model oluşturuldu: {$path}", 'green');
+            break;
 
-        $path = APP_PATH . "/Models/{$name}.php";
-        if (file_exists($path)) {
-            echo "Error: Model {$name} already exists.\n";
-            exit(1);
-        }
+        case 'make:migration':
+            $name = $args[1] ?? null;
+            if (!$name) { $say("Kullanım: ./ief make:migration <description>", 'yellow'); exit(1); }
+            $timestamp = date('Ymd_His');
+            $slug = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '_', $name));
+            $filename = "m{$timestamp}_{$slug}";
+            $path = APP_PATH . "/Database/Migrations/{$filename}.php";
+            $stub = "<?php\n\nnamespace App\\Database\\Migrations;\n\nuse App\\Core\\Database;\nuse App\\Core\\Schema;\nuse App\\Core\\Blueprint;\n\nclass {$filename}\n{\n    public function up(Database \$db): void\n    {\n        Schema::create('table_name', function (Blueprint \$t) {\n            \$t->id();\n            \$t->timestamps();\n        });\n    }\n\n    public function down(Database \$db): void\n    {\n        Schema::drop('table_name');\n    }\n}\n";
+            file_put_contents($path, $stub);
+            $say("✓ Migration oluşturuldu: {$path}", 'green');
+            break;
 
-        $table = strtolower($name) . 's'; // simple pluralization
-        $template = "<?php\n\nnamespace App\Models;\n\nuse App\Core\Model;\n\nclass {$name} extends Model\n{\n    protected static string \$table = '{$table}';\n    protected static array \$fillable = [];\n}\n";
+        case 'make:middleware':
+            $name = $args[1] ?? null;
+            if (!$name) { $say("Kullanım: ./ief make:middleware <Name>", 'yellow'); exit(1); }
+            $name = ucfirst($name);
+            if (!str_ends_with($name, 'Middleware')) $name .= 'Middleware';
+            $path = APP_PATH . "/Middleware/{$name}.php";
+            if (file_exists($path)) { $say("Zaten var: {$path}", 'red'); exit(1); }
+            $stub = "<?php\n\nnamespace App\\Middleware;\n\nuse App\\Core\\Request;\n\nclass {$name}\n{\n    public function handle(Request \$request, array \$params = []): bool\n    {\n        return true;\n    }\n}\n";
+            file_put_contents($path, $stub);
+            $say("✓ Middleware oluşturuldu: {$path}", 'green');
+            break;
 
-        file_put_contents($path, $template);
-        echo "Model created: {$path}\n";
-        break;
+        case 'make:seeder':
+            $name = $args[1] ?? null;
+            if (!$name) { $say("Kullanım: ./ief make:seeder <Name>", 'yellow'); exit(1); }
+            $name = ucfirst($name);
+            if (!str_ends_with($name, 'Seeder')) $name .= 'Seeder';
+            $dir  = APP_PATH . "/Database/Seeders";
+            if (!is_dir($dir)) mkdir($dir, 0755, true);
+            $path = "{$dir}/{$name}.php";
+            if (file_exists($path)) { $say("Zaten var: {$path}", 'red'); exit(1); }
+            $stub = "<?php\n\nnamespace App\\Database\\Seeders;\n\nuse App\\Core\\Database;\n\nclass {$name}\n{\n    public function run(Database \$db): void\n    {\n        // \$db->execute(\"INSERT INTO users (...) VALUES (...)\");\n    }\n}\n";
+            file_put_contents($path, $stub);
+            $say("✓ Seeder oluşturuldu: {$path}", 'green');
+            break;
 
-    case 'migrate':
-        echo "Starting migration...\n";
-        try {
+        // ──────────────────────────── DB:SEED ────────────────────────────
+        case 'db:seed':
+            $dir = APP_PATH . '/Database/Seeders';
+            if (!is_dir($dir)) { $say("Seeder klasörü yok.", 'yellow'); exit(0); }
+            $files = glob($dir . '/*.php');
+            if (!$files) { $say("Hiç seeder yok.", 'yellow'); exit(0); }
             $db = Database::getInstance();
-
-            // Create migrations table if not exists
-            $db->execute("CREATE TABLE IF NOT EXISTS migrations (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                migration VARCHAR(255),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )");
-
-            // Get applied migrations
-            $appliedMigrations = $db->fetchAll("SELECT migration FROM migrations");
-            $applied = array_map(fn($m) => $m['migration'], $appliedMigrations);
-
-            // Get all migration files
-            $files = glob(APP_PATH . '/Database/Migrations/*.php');
-            $newMigrations = [];
-
-            foreach ($files as $file) {
-                $migration = basename($file, '.php');
-                if (!in_array($migration, $applied)) {
-                    $newMigrations[] = $file;
+            foreach ($files as $f) {
+                require_once $f;
+                $class = 'App\\Database\\Seeders\\' . basename($f, '.php');
+                if (class_exists($class)) {
+                    $say("Seeding: {$class}", 'cyan');
+                    (new $class())->run($db);
                 }
             }
+            $say("✓ Seed işlemi bitti.", 'green');
+            break;
 
-            if (empty($newMigrations)) {
-                echo "Nothing to migrate.\n";
-            } else {
-                foreach ($newMigrations as $file) {
-                    $migration = basename($file, '.php');
-                    echo "Migrating: $migration\n";
-
-                    require_once $file;
-                    $className = 'App\\Database\\Migrations\\' . $migration;
-                    $instance = new $className();
-
-                    $instance->up($db);
-
-                    $db->execute("INSERT INTO migrations (migration) VALUES (?)", [$migration]);
-                    echo "Migrated:  $migration\n";
-                }
-                echo "Migration completed successfully.\n";
+        // ──────────────────────────── ROUTE:LIST ─────────────────────────
+        case 'route:list':
+            require CONFIG_PATH . '/routes.php';
+            $routes = \App\Core\Router::getRoutes();
+            $say(sprintf("%-7s %-30s %s", "METHOD", "URI", "ACTION"), 'bold');
+            $say(str_repeat('─', 70), 'dim');
+            foreach ($routes as $key => $r) {
+                if ($key === 'fallback') continue;
+                $action = is_string($r['action']) ? $r['action'] : 'Closure';
+                $say(sprintf("%-7s %-30s %s", $r['method'], $r['uri'], $action));
             }
+            break;
 
-        } catch (Exception $e) {
-            echo "Migration failed: " . $e->getMessage() . "\n";
-            exit(1);
-        }
-        break;
+        // ──────────────────────────── CACHE:CLEAR ────────────────────────
+        case 'cache:clear':
+            $cache = STORAGE_PATH . '/cache';
+            if (is_dir($cache)) {
+                $it = new RecursiveIteratorIterator(
+                    new RecursiveDirectoryIterator($cache, FilesystemIterator::SKIP_DOTS),
+                    RecursiveIteratorIterator::CHILD_FIRST
+                );
+                foreach ($it as $f) {
+                    $f->isDir() ? rmdir($f->getRealPath()) : unlink($f->getRealPath());
+                }
+            }
+            $say("✓ Cache temizlendi.", 'green');
+            break;
 
-    case 'make:migration':
-        $name = $args[1] ?? null;
-        if (!$name) {
-            echo "Usage: ./ief make:migration <description>\n";
-            exit(1);
-        }
-        $timestamp = date('Ymd_His');
-        $name = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $name));
-        $filename = "m{$timestamp}_{$name}";
-        $path = APP_PATH . "/Database/Migrations/{$filename}.php";
-
-        $template = "<?php\n\nnamespace App\Database\Migrations;\n\nuse App\Core\Database;\n\nclass {$filename}\n{\n    public function up(Database \$db)\n    {\n        // \$db->execute(\"CREATE TABLE ...\");\n    }\n\n    public function down(Database \$db)\n    {\n        // \$db->execute(\"DROP TABLE ...\");\n    }\n}\n";
-
-        file_put_contents($path, $template);
-        echo "Migration created: {$path}\n";
-        break;
-
-    case 'make:middleware':
-        $name = $args[1] ?? null;
-        if (!$name) {
-            echo "Usage: ./ief make:middleware <Name>\n";
-            exit(1);
-        }
-        $name = ucfirst($name) . 'Middleware';
-        $path = APP_PATH . "/Middleware/{$name}.php";
-
-        if (!is_dir(dirname($path)))
-            mkdir(dirname($path), 0755, true);
-
-        $template = "<?php\n\nnamespace App\Middleware;\n\nuse App\Core\Request;\n\nclass {$name}\n{\n    public function handle(Request \$request, array \$params = []): bool\n    {\n        return true;\n    }\n}\n";
-
-        file_put_contents($path, $template);
-        echo "Middleware created: {$path}\n";
-        break;
-
-    case 'migrate:rollback':
-        echo "Rolling back last migration...\n";
-        try {
-            $db = Database::getInstance();
-            $last = $db->fetch("SELECT * FROM migrations ORDER BY id DESC LIMIT 1");
-
-            if (!$last) {
-                echo "Nothing to rollback.\n";
-            } else {
-                $migration = $last['migration'];
-                $file = APP_PATH . "/Database/Migrations/{$migration}.php";
-
-                if (file_exists($file)) {
-                    require_once $file;
-                    $className = 'App\\Database\\Migrations\\' . $migration;
-                    $instance = new $className();
-                    $instance->down($db);
-
-                    $db->execute("DELETE FROM migrations WHERE id = ?", [$last['id']]);
-                    echo "Rolled back: $migration\n";
+        // ──────────────────────────── USER:CREATE ────────────────────────
+        case 'user:create':
+            // Interactive — şifre stty -echo ile gizlenir, terminal history'sine düşmez
+            $prompt = function (string $label, bool $hidden = false) {
+                fwrite(STDOUT, $label);
+                if ($hidden) {
+                    system('stty -echo');
+                    $input = trim((string) fgets(STDIN));
+                    system('stty echo');
+                    fwrite(STDOUT, "\n");
                 } else {
-                    echo "Error: Migration file not found for $migration\n";
+                    $input = trim((string) fgets(STDIN));
                 }
+                return $input;
+            };
+
+            $name  = $prompt("İsim: ");
+            $email = $prompt("E-posta: ");
+            $role  = $prompt("Rol (superadmin|admin|editor|user) [superadmin]: ");
+            $role  = $role ?: 'superadmin';
+            $pass  = $prompt("Şifre: ", true);
+            $pass2 = $prompt("Şifre (tekrar): ", true);
+
+            if ($name === '' || $email === '' || $pass === '') {
+                $say("✗ İsim, e-posta ve şifre zorunlu.", 'red'); exit(1);
             }
-        } catch (Exception $e) {
-            echo "Rollback failed: " . $e->getMessage() . "\n";
-        }
-        break;
+            if ($pass !== $pass2) {
+                $say("✗ Şifreler eşleşmedi.", 'red'); exit(1);
+            }
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $say("✗ Geçersiz e-posta.", 'red'); exit(1);
+            }
+            if (!in_array($role, ['superadmin','admin','editor','user'], true)) {
+                $say("✗ Geçersiz rol.", 'red'); exit(1);
+            }
 
-    case 'db:seed':
-        // Basic seeder runner
-        echo "Running seeders...\n";
-        // Implementation would go here
-        echo "Seeders completed.\n";
-        break;
+            $db   = Database::getInstance();
+            $hash = password_hash($pass, PASSWORD_BCRYPT);
+            $existing = $db->fetch("SELECT id FROM users WHERE email = ?", [$email]);
 
-    case 'help':
-    default:
-        echo "Available commands:\n";
-        echo "  serve [port]           Start PHP development server\n";
-        echo "  make:controller <name> Create a new controller\n";
-        echo "  make:model <name>      Create a new model\n";
-        echo "  make:migration <desc>  Create a new migration file\n";
-        echo "  make:middleware <name> Create a new middleware\n";
-        echo "  migrate                Run database migrations\n";
-        echo "  migrate:rollback       Rollback the last migration\n";
-        echo "  db:seed                Run database seeders\n";
-        echo "  help                   Show this help message\n";
-        break;
+            if ($existing) {
+                $update = $prompt("Bu e-postada kullanıcı var (id={$existing['id']}). Şifre/role güncellensin mi? (y/N): ");
+                if (strtolower($update) === 'y') {
+                    $db->execute(
+                        "UPDATE users SET name = ?, password = ?, role = ? WHERE id = ?",
+                        [$name, $hash, $role, $existing['id']]
+                    );
+                    $say("✓ Kullanıcı güncellendi (id={$existing['id']}).", 'green');
+                } else {
+                    $say("İşlem iptal.", 'yellow');
+                }
+            } else {
+                $db->execute(
+                    "INSERT INTO users (name, email, password, role) VALUES (?,?,?,?)",
+                    [$name, $email, $hash, $role]
+                );
+                $say("✓ Kullanıcı oluşturuldu: {$email} ({$role}).", 'green');
+            }
+            break;
+
+        // ──────────────────────────── KEY:GENERATE ───────────────────────
+        case 'key:generate':
+            $key = 'ief-' . bin2hex(random_bytes(32));
+            $say("Yeni anahtar (config/app.php 'key' alanına yapıştır):", 'cyan');
+            $say($key, 'bold');
+            break;
+
+        // ──────────────────────────── HELP ───────────────────────────────
+        case '-h':
+        case '--help':
+        case 'help':
+        default:
+            $bold("Kullanım: ./ief <command> [args]");
+            echo "\n";
+            $say("KOMUTLAR", 'bold');
+            $cmds = [
+                'serve [port]'               => 'Geliştirme sunucusunu başlat (default :8000)',
+                'migrate'                    => 'Bekleyen migration\'ları çalıştır',
+                'migrate:rollback [steps]'   => 'Son migration\'ları geri al (default 1)',
+                'migrate:fresh'              => 'Tüm tabloları sil + sıfırdan migrate et',
+                'migrate:status'             => 'Migration durumunu göster',
+                'make:controller <Name>'     => 'Yeni controller oluştur',
+                'make:model <Name>'          => 'Yeni model oluştur',
+                'make:migration <desc>'      => 'Yeni migration oluştur',
+                'make:middleware <Name>'     => 'Yeni middleware oluştur',
+                'make:seeder <Name>'         => 'Yeni seeder oluştur',
+                'db:seed'                    => 'Tüm seeder\'ları çalıştır',
+                'user:create'                => 'Interaktif kullanıcı oluştur (şifre gizli)',
+                'route:list'                 => 'Tanımlı tüm route\'ları listele',
+                'cache:clear'                => 'storage/cache dizinini temizle',
+                'key:generate'               => 'Yeni app key üret (manuel yapıştır)',
+                'help'                       => 'Bu yardımı göster',
+            ];
+            foreach ($cmds as $k => $v) {
+                printf("  %s%-28s%s %s\n", $c['cyan'], $k, $c['reset'], $v);
+            }
+            break;
+    }
+
+} catch (\Throwable $e) {
+    $say("✗ Hata: " . $e->getMessage(), 'red');
+    if (getenv('IEF_TRACE')) {
+        echo $e->getTraceAsString() . "\n";
+    }
+    exit(1);
 }
 
 echo "\n";

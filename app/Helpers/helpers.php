@@ -1,26 +1,30 @@
 <?php
 /**
- * Global Helper Fonksiyonları
- * 
- * @package    IEF Framework
+ * Global Helpers — view/controller/her yerden çağrılabilir.
+ *
+ * v2.0: Carbon bağımlılığı kaldırıldı (DateTime ile).
+ *
+ * @package IEF Framework
  */
 
+declare(strict_types=1);
+
+use App\Core\Auth;
 use App\Core\Config;
+use App\Core\Lang;
 use App\Core\Session;
 
 if (!function_exists('config')) {
-    function config(string $key, $default = null)
+    function config(string $key, mixed $default = null): mixed
     {
         return Config::get($key, $default);
     }
 }
 
 if (!function_exists('session')) {
-    function session(?string $key = null, $default = null)
+    function session(?string $key = null, mixed $default = null): mixed
     {
-        if ($key === null) {
-            return Session::class;
-        }
+        if ($key === null) return Session::all();
         return Session::get($key, $default);
     }
 }
@@ -32,10 +36,17 @@ if (!function_exists('auth')) {
     }
 }
 
+if (!function_exists('user')) {
+    function user(): ?\App\Models\User
+    {
+        return Auth::user();
+    }
+}
+
 if (!function_exists('csrf_token')) {
     function csrf_token(): string
     {
-        return Session::getCsrfToken();
+        return Session::csrfToken();
     }
 }
 
@@ -54,14 +65,15 @@ if (!function_exists('method_field')) {
 }
 
 if (!function_exists('old')) {
-    function old(string $key, $default = '')
+    function old(string $key, mixed $default = ''): mixed
     {
-        return Session::getFlash('old_input')[$key] ?? $default;
+        $old = Session::getFlash('_old_input', []);
+        return $old[$key] ?? $default;
     }
 }
 
 if (!function_exists('flash')) {
-    function flash(string $key, $default = null)
+    function flash(string $key, mixed $default = null): mixed
     {
         return Session::getFlash($key, $default);
     }
@@ -70,8 +82,8 @@ if (!function_exists('flash')) {
 if (!function_exists('url')) {
     function url(string $path = ''): string
     {
-        $baseUrl = rtrim(config('app.url', ''), '/');
-        return $baseUrl . '/' . ltrim($path, '/');
+        $base = rtrim((string) config('app.url', ''), '/');
+        return $base . '/' . ltrim($path, '/');
     }
 }
 
@@ -83,9 +95,10 @@ if (!function_exists('asset')) {
 }
 
 if (!function_exists('redirect')) {
-    function redirect(string $url): void
+    function redirect(string $url, int $status = 302): void
     {
-        header("Location: {$url}");
+        http_response_code($status);
+        header("Location: $url");
         exit;
     }
 }
@@ -93,8 +106,7 @@ if (!function_exists('redirect')) {
 if (!function_exists('back')) {
     function back(): void
     {
-        $referer = $_SERVER['HTTP_REFERER'] ?? '/';
-        redirect($referer);
+        redirect($_SERVER['HTTP_REFERER'] ?? '/');
     }
 }
 
@@ -105,40 +117,29 @@ if (!function_exists('e')) {
     }
 }
 
-if (!function_exists('h')) {
-    function h(?string $value): string
-    {
-        return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
-    }
-}
-
 if (!function_exists('dd')) {
-    function dd(...$vars): void
+    function dd(mixed ...$vars): never
     {
-        echo '<pre>';
-        foreach ($vars as $var) {
-            var_dump($var);
-        }
+        echo '<pre style="background:#f8fafc;color:#0f172a;padding:14px 16px;border-radius:6px;border:1px solid #e2e8f0;font:13px/1.5 ui-monospace,monospace;margin:12px;">';
+        foreach ($vars as $v) var_dump($v);
         echo '</pre>';
         exit;
     }
 }
 
 if (!function_exists('dump')) {
-    function dump(...$vars): void
+    function dump(mixed ...$vars): void
     {
-        echo '<pre>';
-        foreach ($vars as $var) {
-            var_dump($var);
-        }
+        echo '<pre style="background:#f8fafc;color:#0f172a;padding:14px 16px;border-radius:6px;border:1px solid #e2e8f0;font:13px/1.5 ui-monospace,monospace;margin:12px;">';
+        foreach ($vars as $v) var_dump($v);
         echo '</pre>';
     }
 }
 
 if (!function_exists('now')) {
-    function now(): \Carbon\Carbon
+    function now(): \DateTimeImmutable
     {
-        return \Carbon\Carbon::now('Europe/Istanbul');
+        return new \DateTimeImmutable('now', new \DateTimeZone((string) config('app.timezone', 'Europe/Istanbul')));
     }
 }
 
@@ -150,44 +151,35 @@ if (!function_exists('uuid')) {
 }
 
 if (!function_exists('format_money')) {
-    function format_money($amount, string $currency = '₺'): string
+    function format_money(mixed $amount, string $currency = '₺'): string
     {
         return number_format((float) $amount, 2, ',', '.') . ' ' . $currency;
     }
 }
 
 if (!function_exists('format_date')) {
-    function format_date($date, string $format = 'd.m.Y'): string
+    function format_date(mixed $date, string $format = 'd.m.Y'): string
     {
-        if (empty($date))
-            return '-';
-        return \Carbon\Carbon::parse($date)->format($format);
+        if ($date === null || $date === '') return '-';
+        $dt = $date instanceof \DateTimeInterface ? $date : new \DateTimeImmutable((string) $date);
+        return $dt->format($format);
     }
 }
 
 if (!function_exists('format_datetime')) {
-    function format_datetime($date, string $format = 'd.m.Y H:i'): string
+    function format_datetime(mixed $date, string $format = 'd.m.Y H:i'): string
     {
-        if (empty($date))
-            return '-';
-        return \Carbon\Carbon::parse($date)->format($format);
+        return format_date($date, $format);
     }
 }
 
 if (!function_exists('format_phone')) {
     function format_phone(?string $phone): string
     {
-        if (empty($phone))
-            return '-';
-        $cleaned = preg_replace('/[^0-9]/', '', $phone);
-        if (strlen($cleaned) === 10) {
-            return sprintf(
-                '(%s) %s %s %s',
-                substr($cleaned, 0, 3),
-                substr($cleaned, 3, 3),
-                substr($cleaned, 6, 2),
-                substr($cleaned, 8, 2)
-            );
+        if (!$phone) return '-';
+        $c = preg_replace('/[^0-9]/', '', $phone) ?? '';
+        if (strlen($c) === 10) {
+            return sprintf('(%s) %s %s %s', substr($c,0,3), substr($c,3,3), substr($c,6,2), substr($c,8,2));
         }
         return $phone;
     }
@@ -196,118 +188,262 @@ if (!function_exists('format_phone')) {
 if (!function_exists('str_limit')) {
     function str_limit(?string $value, int $limit = 100, string $end = '...'): string
     {
-        if (empty($value))
-            return '';
-        if (mb_strlen($value) <= $limit)
-            return $value;
-        return mb_substr($value, 0, $limit) . $end;
+        if (!$value) return '';
+        return mb_strlen($value) <= $limit ? $value : mb_substr($value, 0, $limit) . $end;
+    }
+}
+
+if (!function_exists('is_current')) {
+    function is_current(string $path): bool
+    {
+        $cur = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+        return $cur === $path || str_starts_with($cur, rtrim($path, '/') . '/');
     }
 }
 
 if (!function_exists('class_active')) {
     function class_active(string $path, string $class = 'active'): string
     {
-        $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        return $currentPath === $path ? $class : '';
-    }
-}
-
-if (!function_exists('is_current_route')) {
-    function is_current_route(string $path): bool
-    {
-        $currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        return $currentPath === $path || str_starts_with($currentPath, $path . '/');
-    }
-}
-
-if (!function_exists('status_badge')) {
-    function status_badge(string $status): string
-    {
-        $config = require CONFIG_PATH . '/app.php';
-        $statuses = $config['order_statuses'] ?? [];
-        $statusConfig = $statuses[$status] ?? [];
-
-        $name = $statusConfig['name'] ?? $status;
-        $color = $statusConfig['color'] ?? 'gray';
-
-        return sprintf(
-            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-%s-100 text--%s-800">%s</span>',
-            $color,
-            $color,
-            e($name)
-        );
-    }
-}
-
-if (!function_exists('role_badge')) {
-    function role_badge(string $role): string
-    {
-        $config = require CONFIG_PATH . '/app.php';
-        $roles = $config['roles'] ?? [];
-        $roleConfig = $roles[$role] ?? [];
-
-        $name = $roleConfig['name'] ?? $role;
-        $colors = [
-            'superadmin' => 'red',
-            'admin' => 'purple',
-            'personel' => 'blue',
-            'driver' => 'green',
-        ];
-        $color = $colors[$role] ?? 'gray';
-
-        return sprintf(
-            '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-%s-100 text-%s-800">%s</span>',
-            $color,
-            $color,
-            e($name)
-        );
+        return is_current($path) ? $class : '';
     }
 }
 
 if (!function_exists('can')) {
+    /**
+     * RBAC kontrol — config/permissions.php matrisinden bakar.
+     * Örn: can('blog.delete'), can('admin.users.edit')
+     */
     function can(string $permission): bool
     {
-        $user = auth();
-        if (!$user)
-            return false;
+        $u = auth();
+        if (!$u) return false;
+        $role = $u['role'] ?? 'user';
+        if ($role === 'superadmin') return true;
 
-        $role = $user['role'];
-        if ($role === 'superadmin')
-            return true;
-
-        $config = require CONFIG_PATH . '/app.php';
-        $roleConfig = $config['roles'][$role] ?? [];
-        $permissions = $roleConfig['permissions'] ?? [];
-
-        if (in_array('*', $permissions))
-            return true;
-        if (in_array($permission, $permissions))
-            return true;
-
-        foreach ($permissions as $perm) {
-            if (str_ends_with($perm, '.*')) {
-                $prefix = substr($perm, 0, -2);
-                if (str_starts_with($permission, $prefix))
-                    return true;
-            }
+        // Önce config/permissions.php → roles map
+        $perms = (array) config("permissions.roles.{$role}.permissions", []);
+        // Geriye dönük: config/app.php → roles map (eski sürüm)
+        if (!$perms) {
+            $perms = (array) config("app.roles.{$role}.permissions", []);
         }
 
+        if (in_array('*', $perms, true)) return true;
+        if (in_array($permission, $perms, true)) return true;
+        foreach ($perms as $p) {
+            if (str_ends_with($p, '.*') && str_starts_with($permission, substr($p, 0, -2))) return true;
+        }
         return false;
+    }
+}
+
+if (!function_exists('role_label')) {
+    function role_label(?string $role): string
+    {
+        if (!$role) return '—';
+        return (string) (config("permissions.roles.{$role}.label") ?? config("app.roles.{$role}.name") ?? $role);
     }
 }
 
 if (!function_exists('is_role')) {
     function is_role(string ...$roles): bool
     {
-        $user = auth();
-        if (!$user)
-            return false;
-        return in_array($user['role'], $roles);
+        $u = auth();
+        return $u !== null && in_array($u['role'] ?? null, $roles, true);
     }
 }
+
 if (!function_exists('trans')) {
     function trans(string $key, array $placeholders = []): string
     {
-        return \App\Core\Lang::get($key, $placeholders);
+        return Lang::get($key, $placeholders);
+    }
+}
+
+if (!function_exists('__')) {
+    function __(string $key, array $placeholders = []): string
+    {
+        return Lang::get($key, $placeholders);
+    }
+}
+
+if (!function_exists('is_editing')) {
+    /**
+     * Inline editör modu aktif mi? ?edit=1 + admin/editor role.
+     */
+    function is_editing(): bool
+    {
+        if (($_GET['edit'] ?? '') !== '1') return false;
+        $u = auth();
+        if (!$u) return false;
+        return in_array($u['role'] ?? 'user', ['superadmin', 'admin', 'editor'], true);
+    }
+}
+
+if (!function_exists('editable')) {
+    /**
+     * Inline edit destekli içerik bloğu.
+     *
+     * Kullanım:
+     *   {!! editable('home.hero.title', 'Hoş geldin!', ['tag'=>'h1', 'class'=>'text-4xl']) !!}
+     *   {!! editable('home.about.body', '<p>...</p>', ['type'=>'html', 'tag'=>'div']) !!}
+     *
+     * Edit modunda: data-editable attribute + dashed border ile düzenlenebilir.
+     * Normal modda: düz HTML render.
+     *
+     * @param array{tag?:string,class?:string,type?:string} $opts
+     */
+    function editable(string $pageDotKey, ?string $default = null, array $opts = []): string
+    {
+        // SiteContent (Onur) ile birleştirildi — aynı key, aynı store
+        $val   = \App\Core\SiteContent::get($pageDotKey, (string) ($default ?? ''));
+        $type  = (string) ($opts['type']  ?? 'text');
+        $tag   = (string) ($opts['tag']   ?? 'span');
+        $class = (string) ($opts['class'] ?? '');
+
+        $safe  = $type === 'html' ? $val : e($val);
+
+        if (\App\Core\SiteContent::isEditing()) {
+            $cls = trim('osk-editable ' . $class);
+            return sprintf(
+                '<%s data-editable="%s" data-editable-type="%s" data-editable-key="%s" class="%s">%s</%s>',
+                $tag,
+                e($pageDotKey),
+                e($type),
+                e($pageDotKey),
+                e($cls),
+                $safe,
+                $tag
+            );
+        }
+
+        $clsAttr = $class !== '' ? ' class="' . e($class) . '"' : '';
+        return "<{$tag}{$clsAttr}>{$safe}</{$tag}>";
+    }
+}
+
+if (!function_exists('editable_icon')) {
+    /**
+     * Inline edit destekli Font Awesome icon.
+     *   {!! editable_icon('home.feature.icon1', 'fa-solid fa-bolt', ['class'=>'text-2xl']) !!}
+     */
+    function editable_icon(string $pageDotKey, string $default = 'fa-solid fa-star', array $opts = []): string
+    {
+        $cls   = \App\Core\SiteContent::get($pageDotKey, $default) ?: $default;
+        $extra = e((string) ($opts['class'] ?? ''));
+
+        if (\App\Core\SiteContent::isEditing()) {
+            return sprintf(
+                '<span class="osk-editable-icon %s" data-editable="%s" data-editable-type="icon" data-editable-key="%s"><i class="%s"></i></span>',
+                $extra,
+                e($pageDotKey),
+                e($pageDotKey),
+                e($cls)
+            );
+        }
+        return sprintf('<i class="%s %s"></i>', e($cls), $extra);
+    }
+}
+
+if (!function_exists('editable_image')) {
+    /**
+     * Inline edit destekli görsel.
+     *   {!! editable_image('home.hero.cover', '/assets/img/default.jpg', ['alt'=>'Hero','class'=>'w-full']) !!}
+     */
+    function editable_image(string $pageDotKey, string $default = '', array $opts = []): string
+    {
+        $src   = \App\Core\SiteContent::get($pageDotKey, $default) ?: $default;
+        $alt   = e((string) ($opts['alt']   ?? ''));
+        $class = e((string) ($opts['class'] ?? ''));
+
+        $img = sprintf('<img src="%s" alt="%s" class="%s">', e($src), $alt, $class);
+
+        if (\App\Core\SiteContent::isEditing()) {
+            return sprintf(
+                '<div class="osk-editable-image" data-editable="%s" data-editable-type="image" data-editable-key="%s">%s</div>',
+                e($pageDotKey),
+                e($pageDotKey),
+                $img
+            );
+        }
+        return $img;
+    }
+}
+
+// ─── Onur tarzı canlı editör helper'ları (SiteContent KV) ─────────────────
+if (!function_exists('content')) {
+    /**
+     * Site içeriği için canlı editör destekli helper.
+     */
+    function content(string $key, string $default = '', array $opts = []): string
+    {
+        $val   = \App\Core\SiteContent::get($key, $default);
+        $tag   = $opts['tag']   ?? 'span';
+        $class = $opts['class'] ?? '';
+        $type  = $opts['type']  ?? 'text';
+
+        if (\App\Core\SiteContent::isEditing()) {
+            $attrs = sprintf(
+                ' data-editable="%s" data-editable-type="%s" data-editable-key="%s" class="%s"',
+                htmlspecialchars($key, ENT_QUOTES),
+                htmlspecialchars($type, ENT_QUOTES),
+                htmlspecialchars($key, ENT_QUOTES),
+                htmlspecialchars(trim($class . ' osk-editable'), ENT_QUOTES)
+            );
+            $safeVal = $type === 'html' ? $val : htmlspecialchars($val, ENT_QUOTES);
+            return "<{$tag}{$attrs}>{$safeVal}</{$tag}>";
+        }
+
+        $safeVal = $type === 'html' ? $val : htmlspecialchars($val, ENT_QUOTES);
+        $classAttr = $class !== '' ? ' class="' . htmlspecialchars($class, ENT_QUOTES) . '"' : '';
+        return "<{$tag}{$classAttr}>{$safeVal}</{$tag}>";
+    }
+}
+
+if (!function_exists('content_text')) {
+    function content_text(string $key, string $default = ''): string
+    {
+        return \App\Core\SiteContent::get($key, $default);
+    }
+}
+
+if (!function_exists('content_image')) {
+    function content_image(string $key, string $default = '', array $opts = []): string
+    {
+        $src = \App\Core\SiteContent::get($key, $default);
+        $alt = htmlspecialchars($opts['alt'] ?? '', ENT_QUOTES);
+        $class = htmlspecialchars($opts['class'] ?? '', ENT_QUOTES);
+        $wrapperClass = htmlspecialchars($opts['wrapper_class'] ?? '', ENT_QUOTES);
+
+        $img = sprintf('<img src="%s" alt="%s" class="%s">', htmlspecialchars($src, ENT_QUOTES), $alt, $class);
+
+        if (\App\Core\SiteContent::isEditing()) {
+            return sprintf(
+                '<div class="osk-editable-image %s" data-editable="%s" data-editable-type="image" data-editable-key="%s">%s</div>',
+                $wrapperClass,
+                htmlspecialchars($key, ENT_QUOTES),
+                htmlspecialchars($key, ENT_QUOTES),
+                $img
+            );
+        }
+        return $wrapperClass !== '' ? '<div class="' . $wrapperClass . '">' . $img . '</div>' : $img;
+    }
+}
+
+if (!function_exists('content_icon')) {
+    function content_icon(string $key, string $default = 'fa-solid fa-star', array $opts = []): string
+    {
+        $cls = \App\Core\SiteContent::get($key, $default);
+        $extra = htmlspecialchars($opts['class'] ?? '', ENT_QUOTES);
+
+        if (\App\Core\SiteContent::isEditing()) {
+            return sprintf(
+                '<span class="osk-editable-icon %s" data-editable="%s" data-editable-type="icon" data-editable-key="%s"><i class="%s"></i></span>',
+                $extra,
+                htmlspecialchars($key, ENT_QUOTES),
+                htmlspecialchars($key, ENT_QUOTES),
+                htmlspecialchars($cls, ENT_QUOTES)
+            );
+        }
+        return sprintf('<i class="%s %s"></i>', htmlspecialchars($cls, ENT_QUOTES), $extra);
     }
 }

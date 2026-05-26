@@ -1,0 +1,48 @@
+<?php
+/**
+ * Veritabanı Konfigürasyonu
+ *
+ * Default: MySQL. SQLite'a düşürmek için 'driver' => 'sqlite' yap
+ * ve 'path' alanını ayarla. .env KULLANMIYORUZ — değerleri doğrudan
+ * buradan yönet.
+ *
+ * @package IEF Framework
+ */
+
+return [
+
+    /*
+     * Default driver: mysql | sqlite
+     */
+    'driver' => 'mysql',
+
+    /*
+     * MySQL / MariaDB ayarları
+     */
+    'host'     => '127.0.0.1',
+    'port'     => 3306,
+    'database' => 'ief_framework',
+    'username' => 'ief_framework',
+    'password' => 'ief_framework123',
+    'charset'  => 'utf8mb4',
+    'collation'=> 'utf8mb4_unicode_ci',
+
+    /*
+     * MySQL'e özel PDO opsiyonları
+     */
+    'options' => [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
+    ],
+
+    /*
+     * SQLite fallback path (driver=sqlite seçildiğinde kullanılır)
+     */
+    'path' => STORAGE_PATH . '/database.sqlite',
+
+    /*
+     * Migration tablosu adı
+     */
+    'migrations_table' => 'migrations',
+];

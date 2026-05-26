@@ -1,42 +1,51 @@
 <?php
 /**
- * Router Sınıfı
- * 
- * @package    IEF Framework
+ * Router — basit, hızlı route engine.
+ *
+ * Özellikler:
+ *   - GET/POST/PUT/DELETE/PATCH + method override (form _method, X-HTTP-Method-Override)
+ *   - Group + prefix + middleware miras
+ *   - Named parameters: {id}, {slug}, {locale}
+ *   - Method injection (Request, route params)
+ *   - resource() helper (RESTful)
+ *
+ * @package IEF Framework
  */
+
+declare(strict_types=1);
 
 namespace App\Core;
 
 class Router
 {
-    protected static array $routes = [];
+    /** @var array<int|string, array<string,mixed>> */
+    protected static array $routes     = [];
+    /** @var array<int, array<string,mixed>> */
     protected static array $groupStack = [];
+
+    /** @var array<string,string> */
     protected static array $patterns = [
-        '{id}' => '([a-zA-Z0-9\-]+)',
-        '{uuid}' => '([a-zA-Z0-9\-]+)',
-        '{orderId}' => '([a-zA-Z0-9\-]+)',
-        '{routeId}' => '([a-zA-Z0-9\-]+)',
-        '{stopId}' => '([a-zA-Z0-9\-]+)',
+        '{id}'     => '([a-zA-Z0-9\-]+)',
+        '{uuid}'   => '([a-zA-Z0-9\-]+)',
+        '{slug}'   => '([a-zA-Z0-9\-_]+)',
+        '{locale}' => '([a-zA-Z]{2})',
     ];
 
-    public static function get(string $uri, $action, array $options = []): void
+    // ─── HTTP method'lar ─────────────────────────────────────────────
+    public static function get(string $uri, mixed $action, array $options = []): void    { self::add('GET',    $uri, $action, $options); }
+    public static function post(string $uri, mixed $action, array $options = []): void   { self::add('POST',   $uri, $action, $options); }
+    public static function put(string $uri, mixed $action, array $options = []): void    { self::add('PUT',    $uri, $action, $options); }
+    public static function patch(string $uri, mixed $action, array $options = []): void  { self::add('PATCH',  $uri, $action, $options); }
+    public static function delete(string $uri, mixed $action, array $options = []): void { self::add('DELETE', $uri, $action, $options); }
+
+    public static function any(string $uri, mixed $action, array $options = []): void
     {
-        self::addRoute('GET', $uri, $action, $options);
+        foreach (['GET','POST','PUT','PATCH','DELETE'] as $m) self::add($m, $uri, $action, $options);
     }
 
-    public static function post(string $uri, $action, array $options = []): void
+    public static function fallback(callable $cb): void
     {
-        self::addRoute('POST', $uri, $action, $options);
-    }
-
-    public static function put(string $uri, $action, array $options = []): void
-    {
-        self::addRoute('PUT', $uri, $action, $options);
-    }
-
-    public static function delete(string $uri, $action, array $options = []): void
-    {
-        self::addRoute('DELETE', $uri, $action, $options);
+        self::$routes['fallback'] = ['callback' => $cb];
     }
 
     public static function group(array $attributes, callable $callback): void
@@ -46,34 +55,19 @@ class Router
         array_pop(self::$groupStack);
     }
 
-    protected static function addRoute(string $method, string $uri, $action, array $options = []): void
+    /**
+     * RESTful resource: index/create/store/show/edit/update/destroy
+     */
+    public static function resource(string $uri, string $controller): void
     {
-        $prefix = '';
-        $middleware = (array) ($options['middleware'] ?? []);
-
-        foreach (self::$groupStack as $group) {
-            if (isset($group['prefix'])) {
-                $prefix .= $group['prefix'];
-            }
-            if (isset($group['middleware'])) {
-                $middleware = array_merge($middleware, (array) $group['middleware']);
-            }
-        }
-
-        $uri = $prefix . $uri;
-        $uri = $uri === '' ? '/' : $uri;
-
-        self::$routes[] = [
-            'method' => $method,
-            'uri' => $uri,
-            'action' => $action,
-            'middleware' => $middleware,
-        ];
-    }
-
-    public static function fallback(callable $callback): void
-    {
-        self::$routes['fallback'] = $callback;
+        self::get   ($uri,            "$controller@index");
+        self::get   ("$uri/create",   "$controller@create");
+        self::post  ($uri,            "$controller@store");
+        self::get   ("$uri/{id}",     "$controller@show");
+        self::get   ("$uri/{id}/edit","$controller@edit");
+        self::put   ("$uri/{id}",     "$controller@update");
+        self::patch ("$uri/{id}",     "$controller@update");
+        self::delete("$uri/{id}",     "$controller@destroy");
     }
 
     public static function getRoutes(): array
@@ -81,55 +75,29 @@ class Router
         return self::$routes;
     }
 
+    // ─── Dispatch ───────────────────────────────────────────────────
     public static function dispatch(): void
     {
-        $method = $_SERVER['REQUEST_METHOD'];
-        $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        $uri = rtrim($uri, '/') ?: '/';
-
-        // PUT/DELETE için method override
-        if ($method === 'POST') {
-            // Form _method field
-            if (isset($_POST['_method'])) {
-                $method = strtoupper($_POST['_method']);
-            }
-            // JSON body _method
-            $input = json_decode(file_get_contents('php://input'), true);
-            if (isset($input['_method'])) {
-                $method = strtoupper($input['_method']);
-            }
-            // X-HTTP-Method-Override header
-            if (isset($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
-                $method = strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
-            }
-        }
-
-        // Debug log
-        error_log("Router dispatch: method=$method, uri=$uri");
+        $request = Request::getInstance();
+        $method  = $request->method();
+        $uri     = $request->uri();
+        $uri     = rtrim($uri, '/') ?: '/';
 
         foreach (self::$routes as $key => $route) {
-            if ($key === 'fallback')
-                continue;
+            if ($key === 'fallback') continue;
+            if ($route['method'] !== $method) continue;
 
-            if ($route['method'] !== $method)
-                continue;
-
-            $pattern = self::convertToPattern($route['uri']);
-
+            $pattern = self::compilePattern($route['uri']);
             if (preg_match($pattern, $uri, $matches)) {
                 array_shift($matches);
 
-                // Log route to DebugBar
                 DebugBar::getInstance()->setRoute("{$route['method']} {$route['uri']}");
 
-                // Run Middlewares
-                foreach ($route['middleware'] as $middleware) {
-                    if (!self::runMiddleware($middleware)) {
-                        return; // Stop if middleware fails
-                    }
+                // Middleware'leri çalıştır
+                foreach ($route['middleware'] as $mw) {
+                    if (!self::runMiddleware($mw, $request)) return;
                 }
 
-                // Run Action
                 self::runAction($route['action'], $matches);
                 return;
             }
@@ -137,92 +105,122 @@ class Router
 
         // 404
         if (isset(self::$routes['fallback'])) {
-            (self::$routes['fallback'])();
-        } else {
-            http_response_code(404);
-            echo '404 Not Found';
+            (self::$routes['fallback']['callback'])();
+            return;
         }
+        http_response_code(404);
+        echo '404 Not Found';
     }
 
-    protected static function convertToPattern(string $uri): string
+    // ─── Internal ───────────────────────────────────────────────────
+    protected static function add(string $method, string $uri, mixed $action, array $options = []): void
+    {
+        $prefix     = '';
+        $middleware = (array) ($options['middleware'] ?? []);
+
+        foreach (self::$groupStack as $group) {
+            if (isset($group['prefix']))     $prefix     .= $group['prefix'];
+            if (isset($group['middleware'])) $middleware  = array_merge($middleware, (array) $group['middleware']);
+        }
+
+        $full = $prefix . $uri;
+        $full = rtrim($full, '/');
+        if ($full === '') $full = '/';
+
+        self::$routes[] = [
+            'method'     => $method,
+            'uri'        => $full,
+            'action'     => $action,
+            'middleware' => $middleware,
+        ];
+    }
+
+    protected static function compilePattern(string $uri): string
     {
         $pattern = preg_quote($uri, '#');
 
-        // Handle specific patterns first
-        foreach (self::$patterns as $placeholder => $regex) {
-            $pattern = str_replace(preg_quote($placeholder, '#'), $regex, $pattern);
+        // Önce özel adlandırılmış pattern'lar
+        foreach (self::$patterns as $ph => $rx) {
+            $pattern = str_replace(preg_quote($ph, '#'), $rx, $pattern);
         }
-
-        // Handle generic {parameter} pattern
-        // preg_quote converts {param} to \{param\}
-        $pattern = preg_replace('#\\\\\{([a-zA-Z0-9\_]+)\\\\\}#', '([^/]+)', $pattern);
+        // Generic {name} → ([^/]+)
+        $pattern = preg_replace('#\\\\\{[a-zA-Z0-9_]+\\\\\}#', '([^/]+)', $pattern);
 
         return '#^' . $pattern . '$#';
     }
 
-    protected static function runMiddleware(string $middleware): bool
+    protected static function runMiddleware(string $mw, Request $request): bool
     {
-        $parts = explode(':', $middleware);
-        $name = $parts[0];
+        $parts  = explode(':', $mw, 2);
+        $name   = $parts[0];
         $params = isset($parts[1]) ? explode(',', $parts[1]) : [];
 
-        $class = 'App\\Middleware\\' . ucfirst($name) . 'Middleware';
-
-        if (class_exists($class)) {
-            $instance = new $class();
-            return $instance->handle(Request::getInstance(), $params);
+        // Tam class adı verilmişse onu kullan; yoksa Middleware\<Name>Middleware
+        if (class_exists($name)) {
+            $class = $name;
+        } else {
+            $class = 'App\\Middleware\\' . ucfirst($name) . 'Middleware';
+            if (!class_exists($class)) return true;
         }
 
-        return true;
+        return (new $class())->handle($request, $params);
     }
-    protected static function runAction($action, array $params = []): void
+
+    protected static function runAction(mixed $action, array $params = []): void
     {
         $result = null;
 
         if (is_callable($action)) {
             $result = call_user_func_array($action, $params);
-        } elseif (is_string($action)) {
+        } elseif (is_string($action) && str_contains($action, '@')) {
             [$controller, $method] = explode('@', $action);
-            $class = 'App\\Controllers\\' . $controller;
-
-            if (class_exists($class)) {
-                $instance = new $class();
-
-                // Reflection ile method parametrelerini kontrol et
-                $reflection = new \ReflectionMethod($instance, $method);
-                $methodParams = [];
-                $paramIndex = 0;
-
-                foreach ($reflection->getParameters() as $param) {
-                    $type = $param->getType();
-
-                    // Request tipinde parametre varsa enjekte et
-                    if ($type instanceof \ReflectionNamedType) {
-                        $typeName = $type->getName();
-                        if ($typeName === 'App\\Core\\Request' || $typeName === Request::class) {
-                            $methodParams[] = Request::getInstance();
-                            continue;
-                        }
-                    }
-
-                    // Route parametrelerinden al
-                    if (isset($params[$paramIndex])) {
-                        $methodParams[] = $params[$paramIndex];
-                        $paramIndex++;
-                    } elseif ($param->isDefaultValueAvailable()) {
-                        $methodParams[] = $param->getDefaultValue();
-                    }
-                }
-
-                $result = call_user_func_array([$instance, $method], $methodParams);
+            // Tam namespace verilmişse (App\... ile başlıyor) doğrudan kullan; aksi halde
+            // App\Controllers\ prefix'i ekle (alt klasörler için "Admin\MessageController" gibi).
+            $class = str_starts_with($controller, 'App\\')
+                ? $controller
+                : 'App\\Controllers\\' . $controller;
+            if (!class_exists($class)) {
+                http_response_code(500);
+                echo "Controller bulunamadı: $class";
+                return;
             }
+            $instance = new $class();
+            $args     = self::resolveMethodArgs($instance, $method, $params);
+            $result   = $instance->$method(...$args);
         }
 
-        // Handle Response
         if ($result instanceof Response) {
             $result->send();
         } elseif (is_string($result)) {
             echo $result;
+        } elseif (is_array($result)) {
+            (new Response())->json($result);
         }
+    }
+
+    protected static function resolveMethodArgs(object $instance, string $method, array $routeParams): array
+    {
+        $ref     = new \ReflectionMethod($instance, $method);
+        $args    = [];
+        $rpIdx   = 0;
+
+        foreach ($ref->getParameters() as $param) {
+            $type = $param->getType();
+            if ($type instanceof \ReflectionNamedType && !$type->isBuiltin()) {
+                $tn = $type->getName();
+                if ($tn === Request::class) {
+                    $args[] = Request::getInstance();
+                    continue;
+                }
+            }
+            if (isset($routeParams[$rpIdx])) {
+                $args[] = $routeParams[$rpIdx++];
+            } elseif ($param->isDefaultValueAvailable()) {
+                $args[] = $param->getDefaultValue();
+            } else {
+                $args[] = null;
+            }
+        }
+        return $args;
     }
 }
