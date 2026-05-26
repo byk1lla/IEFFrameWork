@@ -37,3 +37,4 @@ composer.phar
 /public/assets/img/content/*
 !/public/assets/img/content/.gitkeep
 cred
+/storage/installed.lock
