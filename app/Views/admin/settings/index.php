@@ -323,6 +323,32 @@
             </select>
         </div>
 
+        <h4 class="text-[11px] font-bold uppercase tracking-widest text-slate-400 pt-3 mt-3 border-t border-slate-100"><i class="fa-solid fa-bug text-red-500 mr-1"></i> Hata Raporu Maili</h4>
+        <p class="text-[12.5px] text-slate-500 -mt-1 mb-1">Exception sayfasında "Hatayı Raporla" butonuna basıldığında otomatik mail gönderilir.</p>
+
+        <label class="flex items-start gap-3 p-3.5 border border-slate-200 rounded-md cursor-pointer hover:bg-slate-50 transition">
+            <input type="checkbox" name="mail_error_reporter_enabled" value="1" {{ ($mail['error_reporter_enabled'] ?? '1') ? 'checked' : '' }} class="w-4 h-4 accent-brand-700 cursor-pointer mt-0.5">
+            <div>
+                <div class="text-sm font-semibold text-slate-900">Hata raporu mailini aktif et</div>
+                <div class="text-[12px] text-slate-500 mt-0.5">DB'ye her zaman yazılır; mail sadece bu açıkken gönderilir.</div>
+            </div>
+        </label>
+
+        <div class="grid md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-[12px] font-semibold text-slate-700 mb-1.5">Rapor Maili Alıcı</label>
+                <input type="email" name="mail_error_reporter_to" value="{{ $mail['error_reporter_to'] ?? '' }}" placeholder="dev@example.com"
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-md text-[14px] focus:outline-none focus:border-brand-600 focus:ring-4 focus:ring-brand-600/10 transition">
+                <p class="text-[11.5px] text-slate-400 mt-1">Boş ise Admin Inbox kullanılır.</p>
+            </div>
+            <div>
+                <label class="block text-[12px] font-semibold text-slate-700 mb-1.5">Aynı Hatadan Günde Max</label>
+                <input type="number" name="mail_error_reporter_max_per_day" value="{{ $mail['error_reporter_max_per_day'] ?? 5 }}" min="1" max="100"
+                       class="w-full px-3.5 py-2.5 border border-slate-300 rounded-md text-[14px] focus:outline-none focus:border-brand-600 focus:ring-4 focus:ring-brand-600/10 transition">
+                <p class="text-[11.5px] text-slate-400 mt-1">Spam'i önlemek için throttle. Yeni hatalar her zaman gönderilir.</p>
+            </div>
+        </div>
+
     @elseif($tab === 'ai')
         @php
             $groqKey   = (string) \App\Core\Config::get('services.groq.api_key', '');

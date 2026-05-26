@@ -1,0 +1,27 @@
+{
+  "IEF Framework": {
+    "description": "Modern, lightweight PHP framework by IEF Software. Includes Titan Guard (auth), Obsidian ORM, Titan Pulse (debug bar) and Blueprint migrations.",
+    "cats": [
+      18
+    ],
+    "website": "https://iefsoftware.tr",
+    "icon": "IEF.svg",
+    "headers": {
+      "X-Powered-By": "IEF-Framework(?:/([\\d.]+))?\\;version:\\1",
+      "X-Generator": "IEF Framework(?: ([\\d.]+))?\\;version:\\1"
+    },
+    "meta": {
+      "generator": "IEF Framework(?: ([\\d.]+))?\\;version:\\1",
+      "framework": "^IEF Framework$"
+    },
+    "implies": [
+      "PHP"
+    ],
+    "pricing": [
+      "freemium",
+      "low"
+    ],
+    "oss": true,
+    "saas": false
+  }
+}

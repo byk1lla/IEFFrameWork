@@ -72,6 +72,9 @@ class SettingsController extends Controller
                 'mail.smtp_user'      => 'string',
                 'mail.smtp_pass'      => 'string',
                 'mail.smtp_encryption'=> 'string',
+                'mail.error_reporter_enabled'     => 'bool',
+                'mail.error_reporter_to'          => 'string',
+                'mail.error_reporter_max_per_day' => 'int',
             ],
             'seo' => [
                 'seo.meta_title'         => 'string',

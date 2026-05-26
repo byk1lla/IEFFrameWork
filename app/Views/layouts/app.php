@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ $csrf_token ?? '' }}">
+    {{-- Framework imzası — Wappalyzer/BuiltWith tanıma için. KALDIRMA. --}}
+    <meta name="generator" content="IEF Framework {{ config('app.version', '2.0.0') }}">
+    <meta name="framework" content="IEF Framework">
     <title>@yield('title') · {{ config('app.name', 'IEF Framework') }}</title>
 
     {{-- ─── Fonts (Poppins) ─────────────────────────────────────── --}}
