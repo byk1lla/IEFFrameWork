@@ -241,6 +241,49 @@ try {
             }
             break;
 
+        // ──────────────────────────── ERRORS ─────────────────────────────
+        case 'errors:list':
+            try {
+                $rows = Database::getInstance()->fetchAll(
+                    "SELECT id, exception, file, line, occurrence_count, is_fixed, last_seen_at
+                       FROM error_reports
+                      ORDER BY is_fixed ASC, last_seen_at DESC
+                      LIMIT 20"
+                );
+                if (!$rows) { $say("Hiç hata raporu yok ✓", 'green'); break; }
+                $say(sprintf("%-5s %-8s %-40s %-8s %s", 'ID', 'COUNT', 'EXCEPTION', 'DURUM', 'SON GÖRÜLME'), 'bold');
+                $say(str_repeat('─', 90), 'dim');
+                foreach ($rows as $r) {
+                    $exc = substr((string) $r['exception'], 0, 40);
+                    $status = $r['is_fixed'] ? '✓ FIXED' : '● OPEN';
+                    $color  = $r['is_fixed'] ? 'green' : 'red';
+                    $say(sprintf("%-5d %-8d %-40s %-8s %s", $r['id'], $r['occurrence_count'], $exc, $status, $r['last_seen_at']), $color);
+                }
+            } catch (\Throwable $e) {
+                $say("✗ Hata raporları okunamadı: " . $e->getMessage(), 'red');
+            }
+            break;
+
+        case 'errors:clear':
+            try {
+                $n = Database::getInstance()->execute("DELETE FROM error_reports WHERE is_fixed = 1");
+                $say("✓ {$n} adet çözülmüş hata raporu silindi.", 'green');
+            } catch (\Throwable $e) {
+                $say("✗ Hata: " . $e->getMessage(), 'red');
+            }
+            break;
+
+        case 'errors:fix':
+            $id = (int) ($args[1] ?? 0);
+            if (!$id) { $say("Kullanım: ./ief errors:fix <id>", 'yellow'); exit(1); }
+            try {
+                \App\Models\ErrorReport::markFixed($id);
+                $say("✓ Hata #{$id} 'fixed' olarak işaretlendi.", 'green');
+            } catch (\Throwable $e) {
+                $say("✗ Hata: " . $e->getMessage(), 'red');
+            }
+            break;
+
         // ──────────────────────────── INSTALL:RESET ──────────────────────
         case 'install:reset':
             // Lock dosyasını sil — sihirbazı yeniden çalıştırmak için
@@ -282,6 +325,9 @@ try {
                 'db:seed'                    => 'Tüm seeder\'ları çalıştır',
                 'user:create'                => 'Interaktif kullanıcı oluştur (şifre gizli)',
                 'install:reset'              => 'storage/installed.lock sil — kurulum sihirbazını yeniden aç',
+                'errors:list'                => 'Son 20 hata raporunu listele',
+                'errors:fix <id>'            => 'Hata raporunu "fixed" işaretle',
+                'errors:clear'               => 'Çözülmüş tüm hata raporlarını sil',
                 'route:list'                 => 'Tanımlı tüm route\'ları listele',
                 'cache:clear'                => 'storage/cache dizinini temizle',
                 'key:generate'               => 'Yeni app key üret (manuel yapıştır)',

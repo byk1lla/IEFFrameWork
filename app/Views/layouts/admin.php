@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ $csrf_token ?? '' }}">
+    {{-- Framework imzası — Wappalyzer/BuiltWith tanıma için. KALDIRMA. --}}
+    <meta name="generator" content="IEF Framework {{ config('app.version','2.0.0') }}">
+    <meta name="framework" content="IEF Framework">
     <title>@yield('title') · {{ config('app.name','IEF Framework') }} Yönetim</title>
 
     {{-- ─── Fonts (Poppins) ─────────────────────────────────────── --}}
@@ -307,6 +310,7 @@
                         ['label'=>'Kullanıcılar','href'=>'/admin/users','icon'=>'fa-users','match'=>'/admin/users'],
                         ['label'=>'Ayarlar','href'=>'/admin/settings','icon'=>'fa-gear','match'=>'/admin/settings'],
                         ['label'=>'Loglar','href'=>'/admin/logs','icon'=>'fa-file-lines','match'=>'/admin/logs'],
+                        ['label'=>'Hata Raporları','href'=>'/admin/error-reports','icon'=>'fa-bug','match'=>'/admin/error-reports'],
                     ]],
                 ];
             @endphp

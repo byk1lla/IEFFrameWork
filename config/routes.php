@@ -34,6 +34,11 @@ Router::get('/manifest.webmanifest', 'PwaController@manifest');
 Router::get('/', 'WelcomeController@index');
 
 /*
+ * Error Reporter — exception sayfasındaki "Hatayı Raporla" butonu
+ */
+Router::post('/api/report-error', 'ErrorReporterController@report');
+
+/*
  * Dokümantasyon
  */
 Router::get('/docs',          'DocsController@index');
@@ -166,6 +171,13 @@ Router::group([
     Router::get ('/analytics/events',          'Admin\AnalyticsController@events');
     Router::get ('/analytics/sessions',        'Admin\AnalyticsController@sessions');
     Router::get ('/analytics/sessions/{id}',   'Admin\AnalyticsController@sessionDetail');
+
+    // Hata Raporları
+    Router::get ('/error-reports',             'Admin\ErrorReportController@index');
+    Router::get ('/error-reports/{id}',        'Admin\ErrorReportController@show');
+    Router::post('/error-reports/{id}/fix',    'Admin\ErrorReportController@fix');
+    Router::post('/error-reports/{id}/delete', 'Admin\ErrorReportController@destroy');
+    Router::post('/error-reports/clear-fixed', 'Admin\ErrorReportController@clear');
 });
 
 /*

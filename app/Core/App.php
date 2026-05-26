@@ -20,6 +20,17 @@ class App
         self::$instance = $this;
         Config::load();
         DebugBar::getInstance(); // Debug bar başlat
+
+        // ─── Framework imzası (Wappalyzer tanıma için — KALDIRMA) ──
+        // Bu header her response'a otomatik eklenir. Sonradan
+        // Response::setHeader() ile overwrite edilebilir ama default
+        // olarak gönderildiğinden Wappalyzer/BuiltWith vb. parmak izi
+        // alabilir. Versiyon string'i config/app.php'den okunur.
+        if (!headers_sent()) {
+            $ver = Config::get('app.version', '2.0.0');
+            header('X-Powered-By: IEF-Framework/' . $ver);
+            header('X-Generator: IEF Framework ' . $ver);
+        }
     }
 
     public static function getInstance(): ?App
@@ -83,6 +94,7 @@ class App
         $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
         if (str_starts_with($path, '/admin')) return false;
         if (str_starts_with($path, '/docs')) return false;
+        if (str_starts_with($path, '/api/')) return false;
         if (in_array($path, ['/login', '/logout', '/sifre-sifirla'], true)) return false;
         if (str_starts_with($path, '/sifre-sifirla/')) return false;
 

@@ -15,6 +15,7 @@ class ExceptionHandler
      * Debug modu aktif mi
      */
     protected static bool $debug = true;
+    protected static ?string $lastErrorId = null;
 
     /**
      * Exception'ı işle
@@ -97,6 +98,9 @@ class ExceptionHandler
      */
     protected static function logException(Throwable $e): void
     {
+        // Kullanıcıya gösterilecek kısa, paylaşılabilir hata ID'si
+        self::$lastErrorId = strtoupper(substr(bin2hex(random_bytes(6)), 0, 12));
+
         $logFile = dirname(__DIR__, 2) . '/storage/logs/error-' . date('Y-m-d') . '.log';
         $logDir = dirname($logFile);
 
@@ -105,8 +109,9 @@ class ExceptionHandler
         }
 
         $message = sprintf(
-            "[%s] %s: %s in %s:%d\nStack trace:\n%s\n\n",
+            "[%s] [%s] %s: %s in %s:%d\nStack trace:\n%s\n\n",
             date('Y-m-d H:i:s'),
+            self::$lastErrorId,
             get_class($e),
             $e->getMessage(),
             $e->getFile(),
@@ -305,15 +310,17 @@ class ExceptionHandler
         }
         
         function sendErrorReport() {
+            const userNote = prompt('Hata oluştuğunda ne yapıyordun? (Opsiyonel — boş bırakabilirsin)', '') || '';
+
             const btn = document.querySelector('button[onclick="sendErrorReport()"]');
             const originalText = btn.innerHTML;
-            
+
             // Loading state
             btn.disabled = true;
             btn.innerHTML = '🔄 Raporlanıyor...';
             btn.style.opacity = '0.7';
             btn.style.cursor = 'not-allowed';
-            
+
             const errorData = {
                 exception: {$classJson},
                 message: {$messageJson},
@@ -322,6 +329,7 @@ class ExceptionHandler
                 url: window.location.href,
                 userAgent: navigator.userAgent,
                 timestamp: new Date().toISOString(),
+                user_note: userNote,
                 trace: {$traceJson},
                 request: {$requestJson},
                 server: {$serverJson}
@@ -577,6 +585,27 @@ HTML;
      */
     protected static function renderProductionPage(int $statusCode): void
     {
+        // Önce dedicated view dosyası var mı bak (app/Views/errors/{code}.php)
+        $viewPath = dirname(__DIR__) . '/Views/errors/' . $statusCode . '.php';
+        if (file_exists($viewPath)) {
+            // Site bilgilerini setting'ten al
+            $siteName = 'Site';
+            $contactEmail = '';
+            $errorId = self::$lastErrorId ?? null;
+            try {
+                $general = \App\Models\Setting::group('general');
+                $siteName     = $general['site_name']     ?? Config::get('app.name', 'Site');
+                $contactEmail = $general['contact_email'] ?? '';
+            } catch (\Throwable $e) { /* tablo yoksa */ }
+
+            if (!headers_sent()) {
+                header('Content-Type: text/html; charset=utf-8');
+            }
+            include $viewPath;
+            return;
+        }
+
+        // Fallback — inline tasarım
         $title = match ($statusCode) {
             404 => 'Sayfa Bulunamadı',
             403 => 'Erişim Reddedildi',
