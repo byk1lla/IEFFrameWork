@@ -33,6 +33,15 @@ class App
         Session::start();
         Lang::load();
 
+        // ─── Kurulum sihirbazı redirect'i ─────────────────────────
+        // storage/installed.lock yoksa → /install'a yönlendir
+        // (Sadece public sayfalar için; /install/*, asset'ler hariç.)
+        if ($this->needsInstallation()) {
+            require CONFIG_PATH . '/routes.php';
+            Router::dispatch();
+            return;
+        }
+
         // ─── Bakım modu ─────────────────────────────────────────────
         if ($this->isUnderMaintenance()) {
             $this->serveMaintenancePage();
@@ -42,6 +51,27 @@ class App
         // ─── Router ─────────────────────────────────────────────────
         require CONFIG_PATH . '/routes.php';
         Router::dispatch();
+    }
+
+    /**
+     * Kurulum lock'u yoksa → /install*'a yönlendir.
+     */
+    protected function needsInstallation(): bool
+    {
+        if (file_exists(ROOT_PATH . '/storage/installed.lock')) return false;
+
+        $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+
+        // /install* zaten girilebilir
+        if (str_starts_with($path, '/install')) return true;
+
+        // Asset'lere izin (PHP -S router asset bypass'ı dışında ortamlar için)
+        if (str_starts_with($path, '/assets/')) return false;
+        if (str_starts_with($path, '/uploads/')) return false;
+
+        // Diğer her şeyi /install'a gönder
+        header('Location: /install');
+        exit;
     }
 
     /**
