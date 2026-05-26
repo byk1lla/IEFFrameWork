@@ -241,6 +241,18 @@ try {
             }
             break;
 
+        // ──────────────────────────── INSTALL:RESET ──────────────────────
+        case 'install:reset':
+            // Lock dosyasını sil — sihirbazı yeniden çalıştırmak için
+            $lock = ROOT_PATH . '/storage/installed.lock';
+            if (file_exists($lock)) {
+                unlink($lock);
+                $say("✓ storage/installed.lock silindi. /install tekrar erişilebilir.", 'green');
+            } else {
+                $say("Lock zaten yok — sihirbaz aktif.", 'yellow');
+            }
+            break;
+
         // ──────────────────────────── KEY:GENERATE ───────────────────────
         case 'key:generate':
             $key = 'ief-' . bin2hex(random_bytes(32));
@@ -269,6 +281,7 @@ try {
                 'make:seeder <Name>'         => 'Yeni seeder oluştur',
                 'db:seed'                    => 'Tüm seeder\'ları çalıştır',
                 'user:create'                => 'Interaktif kullanıcı oluştur (şifre gizli)',
+                'install:reset'              => 'storage/installed.lock sil — kurulum sihirbazını yeniden aç',
                 'route:list'                 => 'Tanımlı tüm route\'ları listele',
                 'cache:clear'                => 'storage/cache dizinini temizle',
                 'key:generate'               => 'Yeni app key üret (manuel yapıştır)',

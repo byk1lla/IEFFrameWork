@@ -8,6 +8,20 @@
 use App\Core\Router;
 
 /*
+ * Kurulum Sihirbazı (storage/installed.lock yoksa erişilebilir)
+ */
+Router::get ('/install',          'InstallController@index');
+Router::get ('/install/database', 'InstallController@database');
+Router::post('/install/database', 'InstallController@database');
+Router::get ('/install/migrate',  'InstallController@migrate');
+Router::post('/install/migrate',  'InstallController@migrate');
+Router::get ('/install/admin',    'InstallController@admin');
+Router::post('/install/admin',    'InstallController@admin');
+Router::get ('/install/site',     'InstallController@site');
+Router::post('/install/site',     'InstallController@site');
+Router::get ('/install/done',     'InstallController@done');
+
+/*
  * SEO & PWA (statik dosyalar gibi)
  */
 Router::get('/sitemap.xml',          'SeoController@sitemap');
